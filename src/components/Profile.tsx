@@ -1,30 +1,52 @@
-import { Settings, Heart, MapPin, Star, Calendar, Award, ChevronRight, LogOut, RefreshCw, UserPlus, Shield, TrendingUp, Wallet, Briefcase, DollarSign } from 'lucide-react';
+import { Settings, Heart, MapPin, Star, Calendar, Award, ChevronRight, LogOut, RefreshCw, UserPlus, Shield, Wallet, Briefcase, DollarSign, AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState } from 'react';
 import { GuideRegistration } from './GuideRegistration';
 import { GuideCertification } from './GuideCertification';
-import { PointsDetail } from './PointsDetail';
 import { GuideWallet } from './GuideWallet';
 import { PriceSetting } from './PriceSetting';
-import { getPointsLevel, getLevelProgress, getPointsToNextLevel } from '../data/pointsSystem';
+import { OrderAlertManagement } from './OrderAlertManagement';
+import { TouristVerification } from './TouristVerification';
 
 interface ProfileProps {
   userRole: 'tourist' | 'guide';
   onRoleChange: (role: 'tourist' | 'guide') => void;
+  touristVerified?: boolean;
+  onTouristVerified?: () => void;
 }
 
-export function Profile({ userRole, onRoleChange }: ProfileProps) {
+export function Profile({ userRole, onRoleChange, touristVerified = false, onTouristVerified }: ProfileProps) {
   const isTourist = userRole === 'tourist';
   const [showGuideRegistration, setShowGuideRegistration] = useState(false);
   const [showCertification, setShowCertification] = useState(false);
   const [certificationStatus, setCertificationStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
-  const [showPointsDetail, setShowPointsDetail] = useState(false);
   const [showWallet, setShowWallet] = useState(false);
   const [showPriceSetting, setShowPriceSetting] = useState(false);
   const [currentPrice, setCurrentPrice] = useState(80);
   const [hasVehicle, setHasVehicle] = useState(false);
   const [vehicleBrand, setVehicleBrand] = useState('');
   const [vehiclePrice, setVehiclePrice] = useState(200);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // 平台管理员身份
+  const [showTouristVerification, setShowTouristVerification] = useState(false);
+
+  // 如果显示后台管理界面，直接返回
+  if (showAdminPanel) {
+    return (
+      <div>
+        <button
+          onClick={() => setShowAdminPanel(false)}
+          className="p-4 flex items-center gap-2 text-gray-700 hover:text-gray-900"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          返回
+        </button>
+        <OrderAlertManagement />
+      </div>
+    );
+  }
   
   // 如果显示钱包，直接返回钱包页面
   if (showWallet && !isTourist) {
@@ -43,15 +65,9 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
       </div>
     );
   }
-  
-  // 模拟当前积分（实际应从后端获取）
-  const currentPoints = isTourist ? 0 : 1500;
-  const pointsLevel = currentPoints > 0 ? getPointsLevel(currentPoints) : null;
-  const levelProgress = currentPoints > 0 ? getLevelProgress(currentPoints) : 0;
-  const pointsToNext = currentPoints > 0 ? getPointsToNextLevel(currentPoints) : 0;
 
   const handleGuideRegistrationSuccess = () => {
-    alert('恭喜您！地陪入驻申请已提交，我们将在1-3个工作日内完成审核。审核通过后，您可以切换到地陪模式开始接单。');
+    alert('恭喜您！旅行管家入驻申请已提交，我们将在1-3个工作日内完成审核。审核通过后，您可以切换到旅行管家模式开始接单。');
   };
 
   const handleCertificationSuccess = () => {
@@ -66,7 +82,7 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
           <div>
             <h3 className="text-white mb-1">当前身份</h3>
             <p className="text-white/90 text-sm">
-              {isTourist ? '🧳 游客模式' : '🎒 地陪模式'}
+              {isTourist ? '🧳 游客模式' : '🎒 旅行管家模式'}
             </p>
           </div>
           <button
@@ -74,14 +90,14 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
             className="flex items-center gap-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 px-4 py-2 rounded-xl transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
-            <span className="text-sm">切换为{isTourist ? '地陪' : '游客'}</span>
+            <span className="text-sm">切换为{isTourist ? '旅行管家' : '游客'}</span>
           </button>
         </div>
         <div className="mt-3 pt-3 border-t border-white/20">
           <p className="text-white/80 text-xs">
             {isTourist 
-              ? '💡 切换到地陪模式可以体验接单、时间管理、创建旅行日记等功能'
-              : '💡 切换到游客模式可以体验预约地陪、查看行程、接收旅行日记等功能'
+              ? '💡 切换到旅行管家模式可以体验接单、时间管理、创建旅行日记等功能'
+              : '💡 切换到游客模式可以体验预约旅行管家、查看行程、接收旅行日记等功能'
             }
           </p>
         </div>
@@ -99,9 +115,9 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
             className="w-20 h-20 rounded-full object-cover border-4 border-white/30"
           />
           <div className="flex-1">
-            <h2 className="text-white mb-1">{isTourist ? '旅行者小美' : '地陪阿秀'}</h2>
+            <h2 className="text-white mb-1">{isTourist ? '旅行者小美' : '旅行管家阿秀'}</h2>
             <p className="text-white/90 text-sm mb-2">
-              {isTourist ? '资深旅行达人' : '认证地陪 · 摄影高手'}
+              {isTourist ? '资深旅行达人' : '认证旅行管家 · 摄影高手'}
             </p>
             <div className="flex items-center gap-2">
               <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
@@ -149,54 +165,7 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
         </div>
       </div>
 
-      {/* Points Card - Only for Guides */}
-      {!isTourist && pointsLevel && (
-        <button
-          onClick={() => setShowPointsDetail(true)}
-          className={`bg-gradient-to-r ${pointsLevel.color} rounded-2xl p-6 text-white shadow-lg w-full text-left hover:shadow-xl transition-shadow`}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="text-4xl">{pointsLevel.icon}</div>
-              <div>
-                <h3 className="text-white mb-1">{pointsLevel.name}</h3>
-                <p className="text-white/90 text-sm">Lv.{pointsLevel.level} · {currentPoints} 积分</p>
-              </div>
-            </div>
-            <TrendingUp className="w-6 h-6 text-white" />
-          </div>
 
-          {/* Progress Bar */}
-          {pointsToNext > 0 && (
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-white/90 text-sm">升级进度</span>
-                <span className="text-white/90 text-sm">
-                  还需 {pointsToNext} 分
-                </span>
-              </div>
-              <div className="w-full h-2 bg-white/30 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-white rounded-full transition-all duration-500"
-                  style={{ width: `${levelProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Benefits Preview */}
-          <div className="mt-4 pt-4 border-t border-white/20 grid grid-cols-2 gap-3">
-            <div>
-              <div className="text-white/80 text-xs mb-1">价格上限</div>
-              <div className="text-white text-sm">¥{pointsLevel.priceLimit}/小时</div>
-            </div>
-            <div>
-              <div className="text-white/80 text-xs mb-1">平台抽成</div>
-              <div className="text-white text-sm">{(pointsLevel.commission * 100).toFixed(0)}%</div>
-            </div>
-          </div>
-        </button>
-      )}
 
       {/* Quick Actions - Only for Guides */}
       {!isTourist && (
@@ -273,7 +242,7 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
                 )}
                 {certificationStatus === 'approved' && (
                   <p className="text-white/90 text-xs leading-relaxed">
-                    认证地陪<br/>
+                    认证旅行管家<br/>
                     享受专属特权
                   </p>
                 )}
@@ -310,6 +279,52 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
         <div className="divide-y divide-gray-100">
           {isTourist ? (
             <>
+              {/* Tourist Verification Button - Only for Tourists */}
+              <button 
+                onClick={() => setShowTouristVerification(true)}
+                className={`w-full flex items-center gap-3 p-4 transition-colors border-b-2 ${
+                  touristVerified
+                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border-green-200'
+                    : 'bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border-blue-200'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  touristVerified
+                    ? 'bg-gradient-to-br from-green-500 to-emerald-600'
+                    : 'bg-gradient-to-br from-blue-500 to-cyan-600'
+                }`}>
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="text-gray-800 flex items-center gap-2">
+                    游客身份认证
+                    {touristVerified ? (
+                      <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">已认证</span>
+                    ) : (
+                      <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">未认证</span>
+                    )}
+                  </div>
+                  <div className="text-gray-500 text-sm">
+                    {touristVerified 
+                      ? '已完成身份认证，可预约旅行管家' 
+                      : '认证后才能预约旅行管家服务'}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  {touristVerified ? (
+                    <>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span className="text-xs text-green-600">查看详情</span>
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="w-5 h-5 text-blue-600" />
+                      <span className="text-xs text-blue-600">立即认证</span>
+                    </>
+                  )}
+                </div>
+              </button>
+
               {/* Guide Registration Button - Only for Tourists */}
               <button 
                 onClick={() => setShowGuideRegistration(true)}
@@ -320,10 +335,10 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
                 </div>
                 <div className="flex-1 text-left">
                   <div className="text-gray-800 flex items-center gap-2">
-                    地陪入驻&认证
+                    旅行管家入驻&认证
                     <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">HOT</span>
                   </div>
-                  <div className="text-gray-500 text-sm">成为认证地陪，开启收入之旅</div>
+                  <div className="text-gray-500 text-sm">成为认证旅行管家，开启收入之旅</div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <Shield className="w-5 h-5 text-green-600" />
@@ -348,7 +363,7 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
                 </div>
                 <div className="flex-1 text-left">
                   <div className="text-gray-800">我的预约</div>
-                  <div className="text-gray-500 text-sm">2个地陪服务</div>
+                  <div className="text-gray-500 text-sm">2个旅行管家服务</div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-400" />
               </button>
@@ -393,7 +408,7 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
                   </div>
                   <div className="text-gray-500 text-sm">
                     {certificationStatus === 'approved' 
-                      ? `已认证 · 最高可定价¥${pointsLevel?.priceLimit || 200}` 
+                      ? '已认证 · 最高可定价¥200' 
                       : '未认证 · 最高可定价¥80'}
                   </div>
                 </div>
@@ -451,72 +466,41 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
         </div>
       </div>
 
-      {/* Achievements */}
-      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-        <div className="p-4 border-b border-gray-100">
-          <h3 className="text-gray-800">我的成就</h3>
+
+
+      {/* Admin Panel - Only for Admin */}
+      {isAdmin && (
+        <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl shadow-lg overflow-hidden">
+          <button 
+            onClick={() => setShowAdminPanel(true)}
+            className="w-full flex items-center gap-3 p-4 text-white hover:bg-white/10 transition-colors"
+          >
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="text-white flex items-center gap-2">
+                后台管理系统
+                <span className="text-xs bg-white/30 px-2 py-0.5 rounded-full">管理员</span>
+              </div>
+              <div className="text-white/90 text-sm">查看订单报警记录</div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-white" />
+          </button>
         </div>
-        <div className="p-4">
-          <div className="grid grid-cols-4 gap-3">
-            {isTourist ? (
-              [
-                { icon: '✈️', name: '旅行达人', unlocked: true },
-                { icon: '🌟', name: '超级旅伴', unlocked: true },
-                { icon: '📸', name: '摄影高手', unlocked: true },
-                { icon: '🍜', name: '美食专家', unlocked: false },
-                { icon: '🏔️', name: '户外先锋', unlocked: false },
-                { icon: '🎯', name: '百里挑一', unlocked: true },
-                { icon: '💬', name: '热心助人', unlocked: true },
-                { icon: '🏆', name: '旅行冠军', unlocked: false },
-              ].map((achievement, index) => (
-                <div
-                  key={index}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl ${
-                    achievement.unlocked ? 'bg-gradient-to-br from-yellow-50 to-orange-50' : 'bg-gray-50'
-                  }`}
-                >
-                  <div className={`text-2xl ${!achievement.unlocked && 'opacity-30'}`}>
-                    {achievement.icon}
-                  </div>
-                  <div className={`text-xs text-center ${achievement.unlocked ? 'text-gray-700' : 'text-gray-400'}`}>
-                    {achievement.name}
-                  </div>
-                </div>
-              ))
-            ) : (
-              [
-                { icon: '🏆', name: '金牌地陪', unlocked: true },
-                { icon: '⭐', name: '五星好评', unlocked: true },
-                { icon: '📸', name: '摄影高手', unlocked: true },
-                { icon: '🍜', name: '美食专家', unlocked: true },
-                { icon: '🎯', name: '服务达人', unlocked: true },
-                { icon: '💯', name: '百单成就', unlocked: true },
-                { icon: '💬', name: '好评如潮', unlocked: true },
-                { icon: '👑', name: '王牌向导', unlocked: false },
-              ].map((achievement, index) => (
-                <div
-                  key={index}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl ${
-                    achievement.unlocked ? 'bg-gradient-to-br from-yellow-50 to-orange-50' : 'bg-gray-50'
-                  }`}
-                >
-                  <div className={`text-2xl ${!achievement.unlocked && 'opacity-30'}`}>
-                    {achievement.icon}
-                  </div>
-                  <div className={`text-xs text-center ${achievement.unlocked ? 'text-gray-700' : 'text-gray-400'}`}>
-                    {achievement.name}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Settings */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="text-gray-800">设置</h3>
+          {/* 管理员模式切换按钮 - 仅用于测试 */}
+          <button
+            onClick={() => setIsAdmin(!isAdmin)}
+            className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            {isAdmin ? '退出管理员' : '切换管理员'}
+          </button>
         </div>
         <div className="divide-y divide-gray-100">
           <button className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
@@ -560,16 +544,7 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
         />
       )}
 
-      {/* Points Detail */}
-      {showPointsDetail && (
-        <PointsDetail
-          points={currentPoints}
-          level={pointsLevel}
-          progress={levelProgress}
-          pointsToNext={pointsToNext}
-          onClose={() => setShowPointsDetail(false)}
-        />
-      )}
+
 
       {/* Guide Wallet */}
       {showWallet && (
@@ -597,6 +572,18 @@ export function Profile({ userRole, onRoleChange }: ProfileProps) {
             alert(`设置成功！\n地陪价格：¥${data.price}/小时${data.hasVehicle && data.vehicleInfo ? `\n车辆服务：${data.vehicleInfo.brand} ¥${data.vehicleInfo.price}/天` : ''}`);
           }}
           onClose={() => setShowPriceSetting(false)}
+        />
+      )}
+
+      {/* Tourist Verification */}
+      {showTouristVerification && (
+        <TouristVerification
+          onSuccess={() => {
+            setShowTouristVerification(false);
+            onTouristVerified?.();
+            alert('恭喜您！身份认证已提交成功。审核通过后，您将可以预约旅行管家服务。');
+          }}
+          onClose={() => setShowTouristVerification(false)}
         />
       )}
     </div>

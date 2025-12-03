@@ -17,6 +17,7 @@ export function PaymentDialog({ orderInfo, onClose, onPaymentSuccess }: PaymentD
   const [paymentMethod, setPaymentMethod] = useState<'wechat' | 'alipay' | 'card'>('wechat');
   const [isPaying, setIsPaying] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [agreedToDisclaimer, setAgreedToDisclaimer] = useState(false);
 
   const handlePay = () => {
     setIsPaying(true);
@@ -50,7 +51,7 @@ export function PaymentDialog({ orderInfo, onClose, onPaymentSuccess }: PaymentD
             </p>
             <p className="text-green-700 text-sm flex items-center justify-center gap-2">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-              地陪将收到通知
+              旅行管家将收到通知
             </p>
             <p className="text-green-700 text-sm flex items-center justify-center gap-2">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
@@ -86,7 +87,7 @@ export function PaymentDialog({ orderInfo, onClose, onPaymentSuccess }: PaymentD
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 opacity-90"></div>
             <div className="relative space-y-3">
               <div className="flex items-center justify-between text-white/90 text-sm">
-                <span>地陪</span>
+                <span>旅行管家</span>
                 <span>{orderInfo.guideName}</span>
               </div>
               <div className="flex items-center justify-between text-white/90 text-sm">
@@ -127,7 +128,7 @@ export function PaymentDialog({ orderInfo, onClose, onPaymentSuccess }: PaymentD
                     <p className="text-gray-700 leading-relaxed">
                       <span className="text-gray-800">集合前2小时内取消</span>
                       <br/>
-                      <span className="text-amber-600">→ 退款60%，平台和地陪各20%</span>
+                      <span className="text-amber-600">→ 退款60%，平台和旅行管家各20%</span>
                     </p>
                   </div>
                   <div className="flex items-start gap-2">
@@ -269,6 +270,29 @@ export function PaymentDialog({ orderInfo, onClose, onPaymentSuccess }: PaymentD
 
         {/* Action Buttons */}
         <div className="sticky bottom-0 bg-gradient-to-t from-white/95 to-white/80 backdrop-blur-xl p-6 pt-4 border-t border-gray-100/50">
+          {/* User Disclaimer */}
+          <div className="mb-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-4 border border-red-100/50">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="disclaimer-checkbox"
+                checked={agreedToDisclaimer}
+                onChange={(e) => setAgreedToDisclaimer(e.target.checked)}
+                className="w-4 h-4 mt-0.5 text-red-500 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2 flex-shrink-0"
+              />
+              <label htmlFor="disclaimer-checkbox" className="text-sm text-gray-700 cursor-pointer">
+                我已阅读并同意{' '}
+                <a 
+                  href="#" 
+                  onClick={(e) => { e.preventDefault(); alert('《用户免责声明》详情：本平台仅提供信息中介服务，旅行过程中可能发生的意外伤害、财产损失等风险由用户自行承担。建议购买旅行保险，注意人身财产安全。'); }}
+                  className="text-red-500 underline hover:text-red-600"
+                >
+                  《用户免责声明》
+                </a>
+              </label>
+            </div>
+          </div>
+          
           <div className="flex gap-3">
             <button
               onClick={onClose}
@@ -279,7 +303,7 @@ export function PaymentDialog({ orderInfo, onClose, onPaymentSuccess }: PaymentD
             </button>
             <button
               onClick={handlePay}
-              disabled={isPaying}
+              disabled={isPaying || !agreedToDisclaimer}
               className="flex-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white py-3.5 rounded-2xl hover:shadow-xl hover:shadow-purple-500/50 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2 shadow-lg"
             >
               {isPaying ? (

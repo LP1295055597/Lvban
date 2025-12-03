@@ -28,7 +28,7 @@ interface Notification {
 const mockChats: ChatItem[] = [
   {
     id: 1,
-    name: '地陪阿秀',
+    name: '旅行管家阿秀',
     avatar: 'https://images.unsplash.com/photo-1643646805556-350c057663dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwcG9ydHJhaXQlMjBzbWlsZXxlbnwxfHx8fDE3NjQ1NTE0NDR8MA&ixlib=rb-4.1.0&q=80&w=1080',
     lastMessage: '好的，明天早上9点在古城大门见面吧！',
     timestamp: '10:30',
@@ -48,7 +48,7 @@ const mockChats: ChatItem[] = [
   },
   {
     id: 3,
-    name: '地陪小李',
+    name: '旅行管家小李',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMG1hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc2NDU5ODc5OXww&ixlib=rb-4.1.0&q=80&w=1080',
     lastMessage: '感谢您的预约，我会提前准备好行程',
     timestamp: '昨天',
@@ -191,18 +191,7 @@ export function Messages() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-b-3xl p-6 shadow-lg -mt-4 -mx-4 mb-0">
-        <h2 className="mb-2">消息中心</h2>
-        <p className="text-white/90 text-sm">
-          {unreadChats + unreadNotifications > 0 
-            ? `您有 ${unreadChats + unreadNotifications} 条未读消息`
-            : '暂无新消息'
-          }
-        </p>
-      </div>
-
-      <div className="px-4 space-y-4">
+      <div className="space-y-4 px-4 pt-4">
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -299,7 +288,7 @@ export function Messages() {
                           <h3 className="text-gray-800">{chat.name}</h3>
                           {chat.type !== 'system' && (
                             <span className={`text-xs px-2 py-0.5 rounded-full ${getTypeColor(chat.type)}`}>
-                              {chat.type === 'guide' ? '地陪' : '搭子'}
+                              {chat.type === 'guide' ? '旅行管家' : '搭子'}
                             </span>
                           )}
                         </div>

@@ -7,12 +7,17 @@ import { calculatePrice, formatPrice, getDiscountText, getTimePeriodName } from 
 
 interface BookingCalendarProps {
   guideName: string;
+  guideHourlyRate: number;
+  hasVehicle?: boolean;
+  vehicleType?: string;
+  vehiclePrice?: number;
+  vehicleMileageLimit?: number;
   userLocation: { latitude: number; longitude: number; city?: string } | null;
   onClose: () => void;
   onConfirm: (dates: string[], timeRange: { start: number; end: number }, meetingPoint: MeetingPoint, totalPrice: number) => void;
 }
 
-export function BookingCalendar({ guideName, userLocation, onClose, onConfirm }: BookingCalendarProps) {
+export function BookingCalendar({ guideName, guideHourlyRate, hasVehicle, vehicleType, vehiclePrice, vehicleMileageLimit, userLocation, onClose, onConfirm }: BookingCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [timeRange, setTimeRange] = useState<{ start: number; end: number } | null>(null);
@@ -295,6 +300,64 @@ export function BookingCalendar({ guideName, userLocation, onClose, onConfirm }:
               </div>
             )}
 
+            {/* Vehicle Service Info */}
+            {hasVehicle && vehiclePrice && vehicleMileageLimit && selectedDates.length > 0 && timeRange && (timeRange.end - timeRange.start) >= 3 && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    🚗
+                  </div>
+                  <div>
+                    <h4 className="text-gray-800">用车服务可选</h4>
+                    <p className="text-xs text-gray-600">旅行管家提供 {vehicleType} 用车服务</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">车型：</span>
+                    <span className="text-gray-800">{vehicleType}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">用车费用：</span>
+                    <span className="text-gray-800">¥{vehiclePrice}/天</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">里程限制：</span>
+                    <span className="text-gray-800">{vehicleMileageLimit} 公里/天</span>
+                  </div>
+                  
+                  <div className="border-t border-green-200 pt-2 mt-2" />
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
+                    <div className="flex items-start gap-2">
+                      <span className="flex-shrink-0 mt-0.5">⚠️</span>
+                      <div className="space-y-1">
+                        <p className="font-medium">里程说明：</p>
+                        <p>• 基础价格包含每日 {vehicleMileageLimit} 公里行驶里程</p>
+                        <p>• 超出 {vehicleMileageLimit} 公里后需与旅行管家协商额外费用</p>
+                        <p>• 建议提前沟通行程路线以便准确计算费用</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {selectedDates.length > 0 && (
+                    <>
+                      <div className="border-t border-green-300 pt-2 mt-2" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-800 font-medium">{selectedDates.length} 天用车预估：</span>
+                        <span className="text-green-600 text-xl font-bold">
+                          ¥{vehiclePrice * selectedDates.length}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        💡 用车服务需在确认预约后与旅行管家沟通确认
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Price Estimation */}
             {priceInfo && (timeRange.end - timeRange.start) >= 3 && (
               <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 border border-orange-200">
@@ -354,7 +417,7 @@ export function BookingCalendar({ guideName, userLocation, onClose, onConfirm }:
                 </div>
 
                 <div className="mt-3 text-xs text-gray-500 bg-white rounded-lg p-3">
-                  💡 最终价格以地陪确认为准，此为预估价格
+                  💡 最终价格以旅行管家确认为准，此为预估价格
                 </div>
               </div>
             )}

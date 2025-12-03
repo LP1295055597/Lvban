@@ -1,352 +1,753 @@
-import { useState } from 'react';
-import { Clock, MapPin, Users, Calendar, MessageCircle, Check, X, User, Navigation } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import { ChatDialog } from './ChatDialog';
-import { getMeetingPointById, calculateDistance, formatDistance } from '../data/meetingPoints';
+import { useState, useEffect } from 'react';
+import { Bell, Clock, MapPin, Users, Calendar, FileText, X, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 
-interface Order {
-  id: number;
-  userId: number;
-  userName: string;
-  userAvatar: string;
-  destination: string;
+interface OrderRequest {
+  id: string;
   date: string;
-  timeSlot: string;
-  requirements: string;
-  status: 'pending' | 'accepted' | 'completed';
-  price: string;
-  meetingPointId: string; // 聚集点ID
+  time: string;
+  maleCount: number;
+  femaleCount: number;
+  additionalNotes: string;
+  matchFilters: {
+    skill?: string;
+    certified?: string;
+    gender?: string;
+    priceRange?: string;
+    vehicle?: string;
+  };
+  postedTime: string;
+  touristInfo: {
+    name: string;
+    avatar: string;
+  };
 }
 
-const mockOrders: Order[] = [
-  {
-    id: 1,
-    userId: 1,
-    userName: '旅行者小美',
-    userAvatar: 'https://images.unsplash.com/photo-1535208632259-841d129a6af5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwdHJhdmVsfGVufDF8fHx8MTc2NDU5ODc5OXww&ixlib=rb-4.1.0&q=80&w=1080',
-    destination: '丽江古城+玉龙雪山',
-    date: '2024-12-25',
-    timeSlot: '09:00-18:00',
-    requirements: '希望能拍一些好看的照片，对纳西族文化比较感兴趣，想了解当地的历史故事。中午想品尝地道的丽江美食。',
-    status: 'pending',
-    price: '400元',
-    meetingPointId: 'gucheng-dashuiche'
-  },
-  {
-    id: 2,
-    userId: 2,
-    userName: '张先生',
-    userAvatar: 'https://images.unsplash.com/photo-1633177188754-980c2a6b6266?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMG1hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc2NDUzMzYyNHww&ixlib=rb-4.1.0&q=80&w=1080',
-    destination: '束河古镇+黑龙潭公园',
-    date: '2024-12-23',
-    timeSlot: '14:00-18:00',
-    requirements: '下午半天时间，想去相对安静的景点，避开人群。希望地陪能推荐一些小众但有特色的地方。',
-    status: 'pending',
-    price: '250元',
-    meetingPointId: 'shuhe-rukou'
-  },
-  {
-    id: 3,
-    userId: 3,
-    userName: '李女士',
-    userAvatar: 'https://images.unsplash.com/photo-1535208632259-841d129a6af5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwdHJhdmVsfGVufDF8fHx8MTc2NDU5ODc5OXww&ixlib=rb-4.1.0&q=80&w=1080',
-    destination: '丽江古城深度游',
-    date: '2024-12-22',
-    timeSlot: '09:00-15:00',
-    requirements: '一家三口出游，带着8岁的孩子。希望能安排一些适合孩子的活动，节奏不要太快。',
-    status: 'accepted',
-    price: '350元',
-    meetingPointId: 'gucheng-sifangjie'
-  },
-  {
-    id: 4,
-    userId: 4,
-    userName: '王先生',
-    userAvatar: 'https://images.unsplash.com/photo-1633177188754-980c2a6b6266?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMG1hbiUyMHBvcnRyYWl0fGVufDF8fHx8MTc2NDUzMzYyNHww&ixlib=rb-4.1.0&q=80&w=1080',
-    destination: '玉龙雪山一日游',
-    date: '2024-12-21',
-    timeSlot: '08:00-17:00',
-    requirements: '希望能去蓝月谷和雪山，拍一些风景照。有轻微高反，需要注意休息。',
-    status: 'accepted',
-    price: '500元',
-    meetingPointId: 'yulong-youke'
-  },
-  {
-    id: 5,
-    userId: 5,
-    userName: '赵女士',
-    userAvatar: 'https://images.unsplash.com/photo-1535208632259-841d129a6af5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwdHJhdmVsfGVufDF8fHx8MTc2NDU5ODc5OXww&ixlib=rb-4.1.0&q=80&w=1080',
-    destination: '美食探店一日游',
-    date: '2024-12-20',
-    timeSlot: '10:00-20:00',
-    requirements: '美食爱好者，想尝遍丽江特色小吃和餐厅。希望地陪能带我去当地人常去的地方。',
-    status: 'completed',
-    price: '300元',
-    meetingPointId: 'keyunzhan'
-  }
-];
+interface GrabbedOrder extends OrderRequest {
+  grabbedTime: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  source?: 'grab' | 'booking'; // 订单来源：抢单 or 预约
+}
 
-export function GuideOrderManagement() {
-  const [selectedTab, setSelectedTab] = useState<'pending' | 'accepted' | 'completed'>('pending');
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
-  const [chatOrder, setChatOrder] = useState<Order | null>(null);
+interface GuideOrderManagementProps {
+  hasNewOrders?: boolean;
+  onOrderGrabbed?: () => void;
+}
 
-  const handleAcceptOrder = (orderId: number) => {
-    setOrders(orders.map(order => 
-      order.id === orderId ? { ...order, status: 'accepted' as const } : order
-    ));
+export function GuideOrderManagement({ hasNewOrders = false, onOrderGrabbed }: GuideOrderManagementProps) {
+  const [availableOrders, setAvailableOrders] = useState<OrderRequest[]>([]);
+  const [grabbedOrders, setGrabbedOrders] = useState<GrabbedOrder[]>([]);
+  const [bookingOrders, setBookingOrders] = useState<GrabbedOrder[]>([]); // 游客主动预约的订单
+  const [selectedOrder, setSelectedOrder] = useState<OrderRequest | null>(null);
+  const [showGrabModal, setShowGrabModal] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<GrabbedOrder | null>(null);
+  const [activeTab, setActiveTab] = useState<'available' | 'booking' | 'confirmed'>('available');
+  const [showNotification, setShowNotification] = useState(false);
+
+  // 模拟新订单推送
+  useEffect(() => {
+    // 初始化一些可抢订单
+    const mockOrders: OrderRequest[] = [
+      {
+        id: 'order-1',
+        date: '2024-12-25',
+        time: '全天',
+        maleCount: 2,
+        femaleCount: 1,
+        additionalNotes: '想去玉龙雪山，需要拍照',
+        matchFilters: {
+          skill: '摄影高手',
+          vehicle: '有车',
+          priceRange: '100-150元'
+        },
+        postedTime: new Date().toISOString(),
+        touristInfo: {
+          name: '张三',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400'
+        }
+      },
+      {
+        id: 'order-2',
+        date: '2024-12-26',
+        time: '上午',
+        maleCount: 1,
+        femaleCount: 0,
+        additionalNotes: '想了解丽江历史文化',
+        matchFilters: {
+          skill: '历史讲解',
+          certified: '是',
+          priceRange: '100-150元'
+        },
+        postedTime: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+        touristInfo: {
+          name: '李四',
+          avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400'
+        }
+      }
+    ];
+
+    // 初始化一些游客主动预约的订单
+    const mockBookingOrders: GrabbedOrder[] = [
+      {
+        id: 'booking-1',
+        date: '2024-12-28',
+        time: '下午',
+        maleCount: 2,
+        femaleCount: 2,
+        additionalNotes: '一家人出游，希望带我们游览古城',
+        matchFilters: {},
+        postedTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        touristInfo: {
+          name: '王芳',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400'
+        },
+        grabbedTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        status: 'pending',
+        source: 'booking'
+      },
+      {
+        id: 'booking-2',
+        date: '2024-12-29',
+        time: '全天',
+        maleCount: 1,
+        femaleCount: 1,
+        additionalNotes: '情侣旅行，想拍照打卡',
+        matchFilters: {},
+        postedTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        touristInfo: {
+          name: '赵强',
+          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400'
+        },
+        grabbedTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        status: 'pending',
+        source: 'booking'
+      }
+    ];
+
+    setAvailableOrders(mockOrders);
+    setBookingOrders(mockBookingOrders);
+
+    // 显示新订单通知
+    if (hasNewOrders) {
+      setShowNotification(true);
+      playNotificationSound();
+      setTimeout(() => setShowNotification(false), 5000);
+    }
+  }, [hasNewOrders]);
+
+  const playNotificationSound = () => {
+    // 播放提示音（实际项目中使用真实音频）
+    console.log('🔔 新订单提示音播放');
   };
 
-  const handleRejectOrder = (orderId: number) => {
-    setOrders(orders.filter(order => order.id !== orderId));
+  const handleGrabOrder = (order: OrderRequest) => {
+    setSelectedOrder(order);
+    setShowGrabModal(true);
   };
 
-  const filteredOrders = orders.filter(order => order.status === selectedTab);
+  const confirmGrab = () => {
+    if (!selectedOrder) return;
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return { text: '待接单', color: 'bg-orange-100 text-orange-600', icon: Clock };
-      case 'accepted':
-        return { text: '已接单', color: 'bg-blue-100 text-blue-600', icon: Check };
-      case 'completed':
-        return { text: '已完成', color: 'bg-green-100 text-green-600', icon: Check };
-      default:
-        return { text: '未知', color: 'bg-gray-100 text-gray-600', icon: Clock };
+    const grabbedOrder: GrabbedOrder = {
+      ...selectedOrder,
+      grabbedTime: new Date().toISOString(),
+      status: 'pending',
+      source: 'grab'
+    };
+
+    // 从可抢订单中移除
+    setAvailableOrders(prev => prev.filter(o => o.id !== selectedOrder.id));
+    
+    // 添加到已抢订单
+    setGrabbedOrders(prev => [grabbedOrder, ...prev]);
+
+    setShowGrabModal(false);
+    setSelectedOrder(null);
+
+    // 通知父组件
+    if (onOrderGrabbed) {
+      onOrderGrabbed();
+    }
+
+    // 显示成功提示
+    alert('抢单成功！游客将在匹配页面看到您的信息');
+  };
+
+  const handleAcceptBooking = (order: GrabbedOrder) => {
+    // 接受预约
+    setBookingOrders(prev => prev.filter(o => o.id !== order.id));
+    setGrabbedOrders(prev => [{...order, status: 'accepted'}, ...prev]);
+    alert('已接受预约！订单已移至已接订单');
+  };
+
+  const handleRejectBooking = (order: GrabbedOrder) => {
+    // 拒绝预约
+    if (confirm('确定要拒绝这个预约吗？')) {
+      setBookingOrders(prev => prev.filter(o => o.id !== order.id));
+      alert('已拒绝预约');
     }
   };
 
-  return (
-    <div className="p-4 space-y-4">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl p-6 shadow-lg">
-        <h2 className="mb-2">我的预约</h2>
-        <p className="text-white/90 text-sm">管理您的服务订单</p>
-      </div>
+  const getTimeAgo = (timestamp: string) => {
+    const now = Date.now();
+    const time = new Date(timestamp).getTime();
+    const diff = now - time;
+    
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return '刚刚';
+    if (minutes < 60) return `${minutes}分钟前`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}小时前`;
+    
+    const days = Math.floor(hours / 24);
+    return `${days}天前`;
+  };
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-100">
-          <div className="text-orange-600 mb-1">
-            {orders.filter(o => o.status === 'pending').length}
+  return (
+    <div className="min-h-screen pb-20">
+      {/* 新订单通知 */}
+      {showNotification && (
+        <div className="fixed top-20 left-4 right-4 z-50 animate-slide-down">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-red-500/30 blur-xl rounded-2xl"></div>
+            <div className="relative bg-white/95 backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-orange-200 flex items-start gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
+                <Bell className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-gray-800 mb-1">🎉 新订单来啦！</h4>
+                <p className="text-sm text-gray-600">有 {availableOrders.length} 个订单等待抢单</p>
+              </div>
+              <button
+                onClick={() => setShowNotification(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <div className="text-gray-600 text-xs">待接单</div>
         </div>
-        <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-100">
-          <div className="text-blue-600 mb-1">
-            {orders.filter(o => o.status === 'accepted').length}
+      )}
+
+      {/* Header */}
+      <div className="px-4 pt-4 pb-3">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 blur-xl rounded-2xl"></div>
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-4 shadow-lg border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-gray-800 mb-1">订单功能</h2>
+                <p className="text-sm text-gray-500">抢单接单，开启旅程</p>
+              </div>
+              {availableOrders.length > 0 && (
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                    <Bell className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-white shadow-lg">
+                    {availableOrders.length}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="text-gray-600 text-xs">进行中</div>
-        </div>
-        <div className="bg-white rounded-xl p-4 text-center shadow-sm border border-gray-100">
-          <div className="text-green-600 mb-1">
-            {orders.filter(o => o.status === 'completed').length}
-          </div>
-          <div className="text-gray-600 text-xs">已完成</div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 bg-white rounded-xl p-1 shadow-sm">
-        <button
-          onClick={() => setSelectedTab('pending')}
-          className={`flex-1 py-2 rounded-lg transition-colors ${
-            selectedTab === 'pending'
-              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          待接单
-        </button>
-        <button
-          onClick={() => setSelectedTab('accepted')}
-          className={`flex-1 py-2 rounded-lg transition-colors ${
-            selectedTab === 'accepted'
-              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          已接单
-        </button>
-        <button
-          onClick={() => setSelectedTab('completed')}
-          className={`flex-1 py-2 rounded-lg transition-colors ${
-            selectedTab === 'completed'
-              ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white'
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          已完成
-        </button>
+      <div className="px-4 pb-3">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 blur-xl rounded-2xl"></div>
+          <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl p-1.5 shadow-lg border border-white/20 grid grid-cols-3 gap-1.5">
+            <button
+              onClick={() => setActiveTab('available')}
+              className={`py-3 rounded-xl transition-all flex items-center justify-center gap-2 relative ${
+                activeTab === 'available'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30'
+                  : 'text-gray-600 hover:bg-gray-50/50'
+              }`}
+            >
+              <Sparkles className={`w-4 h-4 ${activeTab === 'available' ? 'animate-pulse' : ''}`} />
+              <span className="font-medium">可抢订单</span>
+              {availableOrders.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-white shadow-lg">
+                  {availableOrders.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('booking')}
+              className={`py-3 rounded-xl transition-all flex items-center justify-center gap-2 relative ${
+                activeTab === 'booking'
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30'
+                  : 'text-gray-600 hover:bg-gray-50/50'
+              }`}
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span className="font-medium">预约订单</span>
+              {bookingOrders.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-white shadow-lg">
+                  {bookingOrders.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('confirmed')}
+              className={`py-3 rounded-xl transition-all flex items-center justify-center gap-2 relative ${
+                activeTab === 'confirmed'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30'
+                  : 'text-gray-600 hover:bg-gray-50/50'
+              }`}
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span className="font-medium">已抢订单</span>
+              {grabbedOrders.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-white shadow-lg">
+                  {grabbedOrders.length}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Orders List */}
-      <div className="space-y-3">
-        {filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <div className="text-gray-400 text-4xl mb-3">📋</div>
-            <p className="text-gray-500">暂无{getStatusInfo(selectedTab).text}订单</p>
-          </div>
-        ) : (
-          filteredOrders.map((order) => {
-            const statusInfo = getStatusInfo(order.status);
-            const StatusIcon = statusInfo.icon;
-            const meetingPoint = getMeetingPointById(order.meetingPointId);
-            // 假设地陪当前位置在丽江古城中心（实际应从真实位置获取）
-            const guideLocation = { latitude: 26.8774, longitude: 100.2298 };
-            const distance = meetingPoint 
-              ? calculateDistance(
-                  guideLocation.latitude,
-                  guideLocation.longitude,
-                  meetingPoint.latitude,
-                  meetingPoint.longitude
-                )
-              : null;
-
-            return (
-              <div key={order.id} className="bg-white rounded-2xl shadow-md overflow-hidden">
-                {/* Order Header */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 border-b border-gray-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <ImageWithFallback
-                        src={order.userAvatar}
-                        alt={order.userName}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-white"
-                      />
-                      <div>
-                        <h3 className="text-gray-800">{order.userName}</h3>
-                        <p className="text-gray-500 text-sm">预约服务</p>
+      {/* Content */}
+      <div className="px-4 space-y-3">
+        {activeTab === 'available' ? (
+          <>
+            {availableOrders.length === 0 ? (
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-100/50 to-gray-200/50 blur-2xl rounded-3xl"></div>
+                <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl p-12 text-center shadow-lg border border-white/20">
+                  <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bell className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-gray-800 mb-2">暂无可抢订单</h3>
+                  <p className="text-sm text-gray-500">有新订单时我们会第一时间通知您</p>
+                </div>
+              </div>
+            ) : (
+              availableOrders.map((order) => (
+                <div key={order.id} className="relative animate-slide-down">
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-red-500/20 to-pink-500/20 blur-2xl rounded-3xl"></div>
+                  <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl p-4 shadow-xl border border-white/20">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3 pb-3 border-b border-gray-100">
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={order.touristInfo.avatar}
+                          alt={order.touristInfo.name}
+                          className="w-12 h-12 rounded-full object-cover shadow-md"
+                        />
+                        <div>
+                          <h4 className="text-gray-800 mb-0.5">{order.touristInfo.name}</h4>
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Clock className="w-3 h-3" />
+                            <span>{getTimeAgo(order.postedTime)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs shadow-lg shadow-orange-500/30 animate-pulse">
+                        可抢单
                       </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs flex items-center gap-1 ${statusInfo.color}`}>
-                      <StatusIcon className="w-3 h-3" />
-                      {statusInfo.text}
-                    </span>
+
+                    {/* Order Details */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <span className="text-gray-600">日期：</span>
+                          <span className="text-gray-800">{order.date} · {order.time}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Users className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <span className="text-gray-600">人数：</span>
+                          <span className="text-gray-800">
+                            共{order.maleCount + order.femaleCount}人 (男{order.maleCount}人，女{order.femaleCount}人)
+                          </span>
+                        </div>
+                      </div>
+
+                      {order.additionalNotes && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-gray-600">备注：</span>
+                            <span className="text-gray-800">{order.additionalNotes}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Match Filters */}
+                    <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-3 mb-3 border border-blue-100">
+                      <h5 className="text-xs text-gray-600 mb-2">游客筛选条件</h5>
+                      <div className="flex flex-wrap gap-2">
+                        {order.matchFilters.skill && (
+                          <span className="bg-white text-purple-700 text-xs px-2.5 py-1 rounded-full border border-purple-200">
+                            ⭐ {order.matchFilters.skill}
+                          </span>
+                        )}
+                        {order.matchFilters.certified && (
+                          <span className="bg-white text-blue-700 text-xs px-2.5 py-1 rounded-full border border-blue-200">
+                            🛡️ 平台认证
+                          </span>
+                        )}
+                        {order.matchFilters.vehicle && (
+                          <span className="bg-white text-orange-700 text-xs px-2.5 py-1 rounded-full border border-orange-200">
+                            🚗 {order.matchFilters.vehicle}
+                          </span>
+                        )}
+                        {order.matchFilters.priceRange && (
+                          <span className="bg-white text-green-700 text-xs px-2.5 py-1 rounded-full border border-green-200">
+                            💰 {order.matchFilters.priceRange}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <button
+                      onClick={() => handleGrabOrder(order)}
+                      className="w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 text-white py-3 rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all flex items-center justify-center gap-2 group"
+                    >
+                      <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                      <span>立即抢单</span>
+                    </button>
                   </div>
                 </div>
-
-                {/* Order Details */}
-                <div className="p-4 space-y-3">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <span className="text-gray-600 text-sm">目的地</span>
-                      <p className="text-gray-800">{order.destination}</p>
-                    </div>
+              ))
+            )}
+          </>
+        ) : activeTab === 'booking' ? (
+          <>
+            {bookingOrders.length === 0 ? (
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-100/50 to-gray-200/50 blur-2xl rounded-3xl"></div>
+                <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl p-12 text-center shadow-lg border border-white/20">
+                  <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-10 h-10 text-gray-400" />
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                    <div className="flex-1">
-                      <span className="text-gray-600 text-sm">日期</span>
-                      <p className="text-gray-800">{order.date}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                    <div className="flex-1">
-                      <span className="text-gray-600 text-sm">时间</span>
-                      <p className="text-gray-800">{order.timeSlot}</p>
-                    </div>
-                  </div>
-
-                  {/* Meeting Point - Show for accepted orders */}
-                  {order.status === 'accepted' && meetingPoint && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border border-green-200">
-                      <div className="flex items-start gap-2 mb-2">
-                        <Navigation className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-gray-700 font-medium">集合点</span>
-                            {distance !== null && (
-                              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                                距离 {formatDistance(distance)}
-                              </span>
-                            )}
+                  <h3 className="text-gray-800 mb-2">暂无预约订单</h3>
+                  <p className="text-sm text-gray-500">去可抢订单中抢单吧</p>
+                </div>
+              </div>
+            ) : (
+              bookingOrders.map((order) => (
+                <div key={order.id} className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 blur-2xl rounded-3xl"></div>
+                  <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl p-4 shadow-xl border border-white/20">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3 pb-3 border-b border-gray-100">
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={order.touristInfo.avatar}
+                          alt={order.touristInfo.name}
+                          className="w-12 h-12 rounded-full object-cover shadow-md"
+                        />
+                        <div>
+                          <h4 className="text-gray-800 mb-0.5">{order.touristInfo.name}</h4>
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Clock className="w-3 h-3" />
+                            <span>预约于 {getTimeAgo(order.grabbedTime)}</span>
                           </div>
-                          <p className="text-gray-800">{meetingPoint.name}</p>
-                          <p className="text-gray-600 text-xs mt-1">{meetingPoint.address}</p>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full text-xs shadow-lg shadow-blue-500/30 animate-pulse">
+                        待确认
+                      </div>
+                    </div>
+
+                    {/* Order Details */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <span className="text-gray-600">日期：</span>
+                          <span className="text-gray-800">{order.date} · {order.time}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Users className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <span className="text-gray-600">人数：</span>
+                          <span className="text-gray-800">
+                            共{order.maleCount + order.femaleCount}人 (男{order.maleCount}人，女{order.femaleCount}人)
+                          </span>
+                        </div>
+                      </div>
+
+                      {order.additionalNotes && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-gray-600">备注：</span>
+                            <span className="text-gray-800">{order.additionalNotes}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info Box */}
+                    <div className="mb-3 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-3 border border-blue-200">
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg">👤</span>
+                        <div className="flex-1 text-xs text-blue-800">
+                          <p className="font-medium mb-1">游客主动预约</p>
+                          <p className="text-blue-700">该游客在浏览旅行管家列表时主动选择了您，请及时确认是否接单</p>
                         </div>
                       </div>
                     </div>
-                  )}
 
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-start gap-2 mb-2">
-                      <User className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-600 text-sm">用户需求</span>
-                    </div>
-                    <p className="text-gray-700 text-sm leading-relaxed">{order.requirements}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                    <div>
-                      <span className="text-gray-600 text-sm">服务费用</span>
-                      <p className="text-orange-600 text-xl">{order.price}</p>
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleRejectBooking(order)}
+                        className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>拒绝预约</span>
+                      </button>
+                      <button
+                        onClick={() => handleAcceptBooking(order)}
+                        className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transition-all flex items-center justify-center gap-2 group"
+                      >
+                        <CheckCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span>接受预约</span>
+                      </button>
                     </div>
                   </div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="p-4 bg-gray-50 border-t border-gray-100">
-                  {order.status === 'pending' ? (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleRejectOrder(order.id)}
-                        className="flex-1 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <X className="w-5 h-5" />
-                        拒绝
-                      </button>
-                      <button
-                        onClick={() => handleAcceptOrder(order.id)}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                      >
-                        <Check className="w-5 h-5" />
-                        接单
-                      </button>
-                    </div>
-                  ) : order.status === 'accepted' ? (
-                    <button
-                      onClick={() => setChatOrder(order)}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      联系游客
-                    </button>
-                  ) : (
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => setChatOrder(order)}
-                        className="flex-1 py-3 border-2 border-blue-500 text-blue-600 rounded-xl hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                        查看聊天
-                      </button>
-                      <button className="flex-1 bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 rounded-xl hover:opacity-90 transition-opacity">
-                        再次邀约
-                      </button>
-                    </div>
-                  )}
+              ))
+            )}
+          </>
+        ) : (
+          <>
+            {grabbedOrders.length === 0 ? (
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-100/50 to-gray-200/50 blur-2xl rounded-3xl"></div>
+                <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl p-12 text-center shadow-lg border border-white/20">
+                  <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-gray-800 mb-2">暂无已抢订单</h3>
+                  <p className="text-sm text-gray-500">去可抢订单中抢单吧</p>
                 </div>
               </div>
-            );
-          })
+            ) : (
+              grabbedOrders.map((order) => (
+                <div key={order.id} className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-500/20 blur-2xl rounded-3xl"></div>
+                  <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl p-4 shadow-xl border border-white/20">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3 pb-3 border-b border-gray-100">
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={order.touristInfo.avatar}
+                          alt={order.touristInfo.name}
+                          className="w-12 h-12 rounded-full object-cover shadow-md"
+                        />
+                        <div>
+                          <h4 className="text-gray-800 mb-0.5">{order.touristInfo.name}</h4>
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Clock className="w-3 h-3" />
+                            <span>{order.source === 'booking' ? '接单于' : '抢单于'} {getTimeAgo(order.grabbedTime)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`px-3 py-1 rounded-full text-xs shadow-lg ${
+                        order.source === 'booking' 
+                          ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-blue-500/30'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-green-500/30'
+                      }`}>
+                        {order.source === 'booking' ? '已接单' : '已抢单'}
+                      </div>
+                    </div>
+
+                    {/* Order Details */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <span className="text-gray-600">日期：</span>
+                          <span className="text-gray-800">{order.date} · {order.time}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Users className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <span className="text-gray-600">人数：</span>
+                          <span className="text-gray-800">
+                            共{order.maleCount + order.femaleCount}人 (男{order.maleCount}人，女{order.femaleCount}人)
+                          </span>
+                        </div>
+                      </div>
+
+                      {order.additionalNotes && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-gray-600">备注：</span>
+                            <span className="text-gray-800">{order.additionalNotes}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Status */}
+                    {order.source === 'booking' ? (
+                      <div className="mt-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-200">
+                        <div className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1 text-xs text-green-800">
+                            <p className="font-medium mb-1">游客已确认预约</p>
+                            <p className="text-green-700">该游客主动预约了您，您已接受预约，请按时提供优质服务</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-3 bg-yellow-50 rounded-xl p-3 border border-yellow-200">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1 text-xs text-yellow-800">
+                            <p className="font-medium mb-1">等待游客确认</p>
+                            <p className="text-yellow-700">您已成功抢单，游客将在24小时内选择旅行管家并确认订单</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </>
         )}
       </div>
 
-      {/* Chat Dialog */}
-      {chatOrder && (
-        <ChatDialog
-          guideName="阿秀"
-          guideAvatar="https://images.unsplash.com/photo-1643646805556-350c057663dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwcG9ydHJhaXQlMjBzbWlsZXxlbnwxfHx8fDE3NjQ1NTE0NDR8MA&ixlib=rb-4.1.0&q=80&w=1080"
-          onClose={() => setChatOrder(null)}
-          hasActiveOrder={true}
-          isGuideView={true}
-          userName={chatOrder.userName}
-        />
+      {/* Grab Order Modal */}
+      {showGrabModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="relative max-w-md w-full">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/30 to-red-500/30 blur-2xl rounded-3xl"></div>
+            <div className="relative bg-white rounded-3xl shadow-2xl max-h-[80vh] overflow-y-auto">
+              {/* Header */}
+              <div className="sticky top-0 bg-white/95 backdrop-blur-xl border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+                <h3 className="text-gray-800">确认抢单</h3>
+                <button
+                  onClick={() => setShowGrabModal(false)}
+                  className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                {/* Tourist Info */}
+                <div className="flex items-center gap-3 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-4 border border-blue-100">
+                  <img
+                    src={selectedOrder.touristInfo.avatar}
+                    alt={selectedOrder.touristInfo.name}
+                    className="w-14 h-14 rounded-full object-cover shadow-md"
+                  />
+                  <div>
+                    <h4 className="text-gray-800">{selectedOrder.touristInfo.name}</h4>
+                    <p className="text-sm text-gray-500">游客</p>
+                  </div>
+                </div>
+
+                {/* Order Info */}
+                <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-start gap-2">
+                    <Calendar className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500 mb-0.5">服务时间</p>
+                      <p className="text-sm text-gray-800">{selectedOrder.date} · {selectedOrder.time}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2">
+                    <Users className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500 mb-0.5">服务人数</p>
+                      <p className="text-sm text-gray-800">
+                        共{selectedOrder.maleCount + selectedOrder.femaleCount}人 (男{selectedOrder.maleCount}人，女{selectedOrder.femaleCount}人)
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedOrder.additionalNotes && (
+                    <div className="flex items-start gap-2">
+                      <FileText className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-500 mb-0.5">补充说明</p>
+                        <p className="text-sm text-gray-800">{selectedOrder.additionalNotes}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tips */}
+                <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 text-sm text-amber-800">
+                      <p className="font-medium mb-1">抢单说明</p>
+                      <ul className="space-y-1 text-xs text-amber-700">
+                        <li>• 抢单成功后，您的信息将展示给游客</li>
+                        <li>• 游客会在24小时内选择旅行管家</li>
+                        <li>• 被选中后系统将通知您确认订单</li>
+                        <li>• 请确保在服务时间内有空</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowGrabModal(false)}
+                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={confirmGrab}
+                    className="flex-1 py-3 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 text-white rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    <span>确认抢单</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

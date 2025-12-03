@@ -17,7 +17,7 @@ interface CertificationFile {
 
 export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' }: GuideCertificationProps) {
   const [certificationFiles, setCertificationFiles] = useState<CertificationFile[]>([]);
-  const [achievements, setAchievements] = useState({
+  const [certifications, setCertifications] = useState({
     tourGuideCard: false,
     drivingLicense: false,
     firstAidCert: false,
@@ -76,7 +76,7 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
             <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <Shield className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-gray-800 mb-2">🎉 您已是认证地陪</h2>
+            <h2 className="text-gray-800 mb-2">🎉 您已是认证旅行管家</h2>
             <p className="text-gray-600 mb-6">
               恭喜！您已通过平台认证，可享受更高的定价权限和优先推荐。
             </p>
@@ -86,7 +86,7 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
               <div className="space-y-2 text-sm text-gray-700 text-left">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                  <span>定价范围：¥30-200/小时（普通地陪¥30-50）</span>
+                  <span>定价范围：¥30-200/小时（普通旅行管家¥30-50）</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
@@ -307,9 +307,9 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
               <label className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
                 <input
                   type="checkbox"
-                  checked={achievements.tourGuideCard}
+                  checked={certifications.tourGuideCard}
                   onChange={(e) =>
-                    setAchievements({ ...achievements, tourGuideCard: e.target.checked })
+                    setCertifications({ ...certifications, tourGuideCard: e.target.checked })
                   }
                   className="w-4 h-4 accent-blue-600"
                 />
@@ -318,9 +318,9 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
               <label className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
                 <input
                   type="checkbox"
-                  checked={achievements.drivingLicense}
+                  checked={certifications.drivingLicense}
                   onChange={(e) =>
-                    setAchievements({ ...achievements, drivingLicense: e.target.checked })
+                    setCertifications({ ...certifications, drivingLicense: e.target.checked })
                   }
                   className="w-4 h-4 accent-blue-600"
                 />
@@ -329,9 +329,9 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
               <label className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
                 <input
                   type="checkbox"
-                  checked={achievements.firstAidCert}
+                  checked={certifications.firstAidCert}
                   onChange={(e) =>
-                    setAchievements({ ...achievements, firstAidCert: e.target.checked })
+                    setCertifications({ ...certifications, firstAidCert: e.target.checked })
                   }
                   className="w-4 h-4 accent-blue-600"
                 />
@@ -340,9 +340,9 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
               <label className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
                 <input
                   type="checkbox"
-                  checked={achievements.languageCert}
+                  checked={certifications.languageCert}
                   onChange={(e) =>
-                    setAchievements({ ...achievements, languageCert: e.target.checked })
+                    setCertifications({ ...certifications, languageCert: e.target.checked })
                   }
                   className="w-4 h-4 accent-blue-600"
                 />
@@ -451,7 +451,7 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
                   onChange={(e) =>
                     setExperience({ ...experience, awards: e.target.value })
                   }
-                  placeholder="例如：2023年度优秀地陪、金牌向导"
+                  placeholder="例如：2023年度优秀旅行管家、金牌向导"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>

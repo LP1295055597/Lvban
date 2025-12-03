@@ -144,7 +144,7 @@ const mockVideos: Video[] = [
   {
     id: 8,
     userId: 8,
-    userName: '地陪阿秀',
+    userName: '旅行管家阿秀',
     userAvatar: 'https://images.unsplash.com/photo-1643646805556-350c057663dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwcG9ydHJhaXQlMjBzbWlsZXxlbnwxfHx8fDE3NjQ1NTE0NDR8MA&ixlib=rb-4.1.0&q=80&w=1080',
     type: 'guide',
     thumbnail: 'https://images.unsplash.com/photo-1677922069769-0164b29e2c1a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqYWRlJTIwZHJhZ29uJTIwc25vdyUyMG1vdW50YWlufGVufDF8fHx8MTc2NDU5OTkwMHww&ixlib=rb-4.1.0&q=80&w=1080',

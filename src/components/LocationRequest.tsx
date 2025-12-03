@@ -99,10 +99,10 @@ export function LocationRequest({ onLocationGranted, onLocationDenied }: Locatio
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-sky-400 via-sky-500 to-green-400 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
         {/* Header Image */}
-        <div className="bg-gradient-to-r from-blue-400 to-purple-500 p-8 text-center relative overflow-hidden">
+        <div className="bg-gradient-to-r from-sky-400 to-green-400 p-8 text-center relative overflow-hidden">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-4 left-4 w-20 h-20 bg-white rounded-full"></div>
             <div className="absolute bottom-4 right-4 w-16 h-16 bg-white rounded-full"></div>
@@ -155,7 +155,7 @@ export function LocationRequest({ onLocationGranted, onLocationDenied }: Locatio
                   </div>
                   <div className="flex-1">
                     <h4 className="text-gray-800 text-sm mb-1">本地服务</h4>
-                    <p className="text-gray-600 text-xs">获取最适合的地陪和导游服务</p>
+                    <p className="text-gray-600 text-xs">获取最适合的旅行管家和导游服务</p>
                   </div>
                 </div>
               </div>
@@ -163,7 +163,7 @@ export function LocationRequest({ onLocationGranted, onLocationDenied }: Locatio
               <div className="space-y-3">
                 <button
                   onClick={requestLocation}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full bg-gradient-to-r from-sky-500 to-green-500 text-white py-3 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg"
                 >
                   <Navigation className="w-5 h-5" />
                   允许获取位置
@@ -204,7 +204,7 @@ export function LocationRequest({ onLocationGranted, onLocationDenied }: Locatio
               <div className="space-y-3">
                 <button
                   onClick={requestLocation}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity"
+                  className="w-full bg-gradient-to-r from-sky-500 to-green-500 text-white py-3 rounded-xl hover:opacity-90 transition-opacity"
                 >
                   重新尝试
                 </button>
@@ -237,7 +237,7 @@ export function LocationRequest({ onLocationGranted, onLocationDenied }: Locatio
 
               <button
                 onClick={handleSkip}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity"
+                className="w-full bg-gradient-to-r from-sky-500 to-green-500 text-white py-3 rounded-xl hover:opacity-90 transition-opacity"
               >
                 继续使用默认位置
               </button>

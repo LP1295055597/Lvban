@@ -56,10 +56,10 @@ export function PriceSetting({
 
   // 推荐价格
   const recommendedPrices = [
-    { label: '入门价', value: 50, desc: '适合新手地陪' },
+    { label: '入门价', value: 50, desc: '适合新手旅行管家' },
     { label: '标准价', value: 80, desc: '最受欢迎' },
     { label: '优质价', value: 120, desc: '高品质服务', needsCert: true },
-    { label: '高端价', value: 180, desc: '资深地陪', needsCert: true },
+    { label: '高端价', value: 180, desc: '资深旅行管家', needsCert: true },
   ];
 
   const handleSave = () => {
@@ -146,7 +146,7 @@ export function PriceSetting({
               <div>
                 <h4 className="text-gray-800 mb-1">当前定价权限</h4>
                 <p className="text-gray-600 text-sm">
-                  {certificationStatus === 'approved' ? '已认证地陪' : '未认证地陪'}
+                  {certificationStatus === 'approved' ? '已认证旅行管家' : '未认证旅行管家'}
                   {pointsLevel && ` · ${pointsLevel.name}`}
                 </p>
               </div>
@@ -191,7 +191,7 @@ export function PriceSetting({
                 <div className="flex gap-2">
                   <Award className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                   <p className="text-blue-700 text-xs">
-                    提升积分等级可获得更高的定价权限，传奇地陪最高可定价¥300/小时
+                    提升积分等级可获得更高的定价权限，传奇旅行管家最高可定价¥300/小时
                   </p>
                 </div>
               </div>
@@ -296,9 +296,9 @@ export function PriceSetting({
               <div>
                 <h4 className="text-green-800 text-sm mb-2">市场参考</h4>
                 <div className="text-green-700 text-xs space-y-1">
-                  <p>• 丽江地陪平均价格：¥80-120/小时</p>
-                  <p>• 新手地陪建议：¥50-80/小时</p>
-                  <p>• 资深地陪参考：¥120-200/小时</p>
+                  <p>• 丽江旅行管家平均价格：¥80-120/小时</p>
+                  <p>• 新手旅行管家建议：¥50-80/小时</p>
+                  <p>• 资深旅行管家参考：¥120-200/小时</p>
                   <p>• 定价适中更容易获得订单</p>
                 </div>
               </div>
@@ -331,19 +331,19 @@ export function PriceSetting({
               <div className="flex items-start gap-2">
                 <span className="text-blue-600 mt-1">💡</span>
                 <p className="text-gray-700">
-                  <span className="font-medium">新手地陪：</span>建议从¥50-60开始，积累好评后逐步提价
+                  <span className="font-medium">新手旅行管家：</span>建议从¥50-60开始，积累好评后逐步提价
                 </p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-blue-600 mt-1">💡</span>
                 <p className="text-gray-700">
-                  <span className="font-medium">有经验地陪：</span>根据服务质量定价¥80-120
+                  <span className="font-medium">有经验旅行管家：</span>根据服务质量定价¥80-120
                 </p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-blue-600 mt-1">💡</span>
                 <p className="text-gray-700">
-                  <span className="font-medium">资深地陪：</span>凭借口碑和特色服务可定价¥150+
+                  <span className="font-medium">资深旅行管家：</span>凭借口碑和特色服务可定价¥150+
                 </p>
               </div>
               <div className="flex items-start gap-2">

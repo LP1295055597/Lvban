@@ -39,6 +39,16 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  
+  /* 旅伴品牌色 - 天蓝色和小草淡绿色 */
+  --brand-sky: #4FC3F7;
+  --brand-sky-light: #81D4FA;
+  --brand-sky-lighter: #B3E5FC;
+  --brand-sky-dark: #29B6F6;
+  --brand-green: #81C784;
+  --brand-green-light: #A5D6A7;
+  --brand-green-lighter: #C8E6C9;
+  --brand-green-dark: #66BB6A;
 }
 
 .dark {
@@ -126,6 +136,48 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/**
+ * Custom animations and utilities
+ */
+@layer utilities {
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+  
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 

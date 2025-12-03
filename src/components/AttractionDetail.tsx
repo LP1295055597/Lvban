@@ -211,7 +211,7 @@ export function AttractionDetail({ attraction, onClose }: AttractionDetailProps)
               找搭子同行
             </button>
             <button className="flex-1 border-2 border-blue-500 text-blue-600 py-3 rounded-xl hover:bg-blue-50 transition-colors">
-              预约地陪
+              预约旅行管家
             </button>
           </div>
         </div>

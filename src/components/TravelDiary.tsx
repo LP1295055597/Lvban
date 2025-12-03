@@ -192,7 +192,7 @@ export function TravelDiary({ guideName, userName, isGuideView, onClose, onSend 
     ctx.fillText(`${diaryData.date}`, 375, 290);
     
     ctx.font = '24px -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif';
-    ctx.fillText(`地陪：${guideName} ♡ 游客：${userName}`, 375, 315);
+    ctx.fillText(`旅行管家：${guideName} ♡ 游客：${userName}`, 375, 315);
 
     // 绘制路线和行程
     let yPosition = 400;
@@ -372,7 +372,7 @@ export function TravelDiary({ guideName, userName, isGuideView, onClose, onSend 
                 />
               </div>
               <span>·</span>
-              <span>地陪：{guideName}</span>
+              <span>旅行管家：{guideName}</span>
               <span>·</span>
               <span>游客：{userName}</span>
             </div>

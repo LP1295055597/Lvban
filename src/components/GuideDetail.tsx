@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { X, Star, MapPin, Award, MessageCircle, Phone, Calendar, Users, Car } from 'lucide-react';
+import { X, MapPin, Star, Award, MessageCircle, Shield, ChevronLeft, ChevronRight, Heart, Navigation, Car, AlertCircle, Phone } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BookingCalendar } from './BookingCalendar';
-import { MeetingPoint } from '../data/meetingPoints';
+import { TouristVerification } from './TouristVerification';
 
 interface Guide {
   id: number;
@@ -21,6 +21,7 @@ interface Guide {
   hasVehicle?: boolean;
   vehicleType?: string;
   vehiclePrice?: number; // 车辆价格（按天计价）
+  vehicleMileageLimit?: number; // 车辆每日里程限制（公里）
 }
 
 interface Review {
@@ -36,13 +37,16 @@ interface Review {
 interface GuideDetailProps {
   guide: Guide;
   userLocation: { latitude: number; longitude: number; city?: string } | null;
+  touristVerified?: boolean;
   onClose: () => void;
   onChat: () => void;
+  onTouristVerified?: () => void;
 }
 
-export function GuideDetail({ guide, userLocation, onClose, onChat }: GuideDetailProps) {
+export function GuideDetail({ guide, userLocation, touristVerified = false, onClose, onChat, onTouristVerified }: GuideDetailProps) {
   const [selectedTab, setSelectedTab] = useState<'intro' | 'reviews'>('intro');
   const [showBooking, setShowBooking] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
 
   const handleBookingConfirm = (dates: string[], timeRange: { start: number; end: number }, meetingPoint: MeetingPoint, totalPrice: number) => {
     const datesText = dates.length === 1 ? dates[0] : `${dates[0]} 等 ${dates.length} 天`;
@@ -103,7 +107,13 @@ export function GuideDetail({ guide, userLocation, onClose, onChat }: GuideDetai
                 <p className="text-orange-600 text-xl">{guide.servicePrice}</p>
               </div>
               <button
-                onClick={() => setShowBooking(true)}
+                onClick={() => {
+                  if (!touristVerified) {
+                    setShowVerification(true);
+                  } else {
+                    setShowBooking(true);
+                  }
+                }}
                 className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:opacity-90 transition-opacity"
               >
                 立即预约
@@ -272,9 +282,25 @@ export function GuideDetail({ guide, userLocation, onClose, onChat }: GuideDetai
           hasVehicle={guide.hasVehicle}
           vehicleType={guide.vehicleType}
           vehiclePrice={guide.vehiclePrice}
+          vehicleMileageLimit={guide.vehicleMileageLimit}
           userLocation={userLocation}
           onClose={() => setShowBooking(false)}
           onConfirm={handleBookingConfirm}
+        />
+      )}
+
+      {/* Tourist Verification */}
+      {showVerification && (
+        <TouristVerification
+          onSuccess={() => {
+            setShowVerification(false);
+            if (onTouristVerified) {
+              onTouristVerified();
+            }
+            // 认证成功后自动打开预约日历
+            setShowBooking(true);
+          }}
+          onClose={() => setShowVerification(false)}
         />
       )}
     </div>

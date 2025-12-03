@@ -38,7 +38,7 @@ export function SendMessageDialog({ userName, userAvatar, userType, onClose, onS
                   ? 'bg-blue-100 text-blue-600' 
                   : 'bg-purple-100 text-purple-600'
               }`}>
-                {userType === 'guide' ? '地陪' : '搭子'}
+                {userType === 'guide' ? '旅行管家' : '搭子'}
               </span>
             </div>
           </div>

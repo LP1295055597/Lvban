@@ -42,10 +42,13 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
   });
   const [introduction, setIntroduction] = useState('');
   const [hourlyRate, setHourlyRate] = useState(100);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [personalInfo, setPersonalInfo] = useState({
     realName: '',
     phone: '',
     city: '丽江',
+    emergencyContact: '',
+    emergencyPhone: '',
   });
 
   // 身份证照片
@@ -142,6 +145,10 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
       alert('请完善个人信息');
       return;
     }
+    if (!agreedToTerms) {
+      alert('请同意服务条款');
+      return;
+    }
 
     // 这里应该调用API提交数据
     alert('提交成功！我们将在1-3个工作日内完成审核，请耐心等待。');
@@ -152,7 +159,7 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
   const canProceedToNextStep = () => {
     switch (currentStep) {
       case 1:
-        return personalInfo.realName && personalInfo.phone && idCardPhotos.front && idCardPhotos.back;
+        return personalInfo.realName && personalInfo.phone && personalInfo.emergencyContact && personalInfo.emergencyPhone && idCardPhotos.front && idCardPhotos.back;
       case 2:
         return mediaFiles.length > 0;
       case 3:
@@ -173,8 +180,8 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
           <div>
-            <h2 className="text-gray-800">地陪入驻认证</h2>
-            <p className="text-gray-500 text-sm mt-1">成为认证地陪，开启收入之旅</p>
+            <h2 className="text-gray-800">旅行管家入驻认证</h2>
+            <p className="text-gray-500 text-sm mt-1">成为认证旅行管家，开启收入之旅</p>
           </div>
           <button
             onClick={onClose}
@@ -347,6 +354,48 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
                   <option value="大理">大理</option>
                   <option value="香格里拉">香格里拉</option>
                 </select>
+              </div>
+
+              {/* 紧急联系人信息 */}
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200">
+                <h4 className="text-gray-800 mb-3 flex items-center gap-2">
+                  <span>🆘</span>
+                  <span>紧急联系人</span>
+                  <span className="text-red-500">*</span>
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-gray-700 text-sm mb-2 block">
+                      联系人姓名 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={personalInfo.emergencyContact}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, emergencyContact: e.target.value })
+                      }
+                      placeholder="请输入紧急联系人姓名"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-700 text-sm mb-2 block">
+                      联系人���话 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={personalInfo.emergencyPhone}
+                      onChange={(e) =>
+                        setPersonalInfo({ ...personalInfo, emergencyPhone: e.target.value })
+                      }
+                      placeholder="请输入紧急联系人电话"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    💡 紧急联系人用于突发情况联系，请填写可随时联系的亲友信息
+                  </p>
+                </div>
               </div>
 
               <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
@@ -679,7 +728,7 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
                   <div className="text-green-800 text-sm">
                     <p className="mb-1">优质介绍示例：</p>
                     <p className="text-xs italic text-green-700 bg-white rounded p-2 mt-2">
-                      "你好！我是丽江本地人，从事地陪服务已有5年时间，接待过来自全国各地的3000+游客。我熟悉丽江的每一条街道，了解最地道的纳西美食，会说流利的英语和日语。擅长摄影，可以帮您记录旅途中的美好瞬间。提供7座商务车服务，可接送机场/火车站。我会用心为每一位游客提供贴心、专业的服务，让您的丽江之旅留下美好回忆！"
+                      "你好！我是丽江本地人，从事旅行管家服务已有5年时间，接待过来自全国各地的3000+游客。我熟悉丽江的每一条街道，了解最地道的纳西美食，会说流利的英语和日语。擅长摄影，可以帮您记录旅途中的美好瞬间。提供7座商务车服务，可接送机场/火车站。我会用心为每一位游客提供贴心、专业的服务，让您的丽江之旅留下美好回忆！"
                     </p>
                   </div>
                 </div>
@@ -795,8 +844,8 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
                     <p className="mb-1">定价建议：</p>
                     <ul className="list-disc list-inside space-y-1 text-xs">
                       <li>价格范围：¥30-200/小时</li>
-                      <li>新手地陪建议定价¥50-80，积累评价后再提价</li>
-                      <li>经验丰富、好评率高的地陪可定价¥150-200</li>
+                      <li>新手旅行管家建议定价¥50-80，积累评价后再提价</li>
+                      <li>经验丰富、好评率高的旅行管家可定价¥150-200</li>
                       <li>提供车辆、摄影等增值服务可适当提高价格</li>
                       <li>价格可在后台随时调整</li>
                     </ul>
@@ -807,31 +856,59 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
-            {currentStep > 1 && (
-              <button
-                onClick={() => setCurrentStep(currentStep - 1)}
-                className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
-              >
-                上一步
-              </button>
+          <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-gray-200">
+            {/* Terms and Conditions - Only show on Step 5 */}
+            {currentStep === 5 && (
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="guide-terms-checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 text-blue-500 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 flex-shrink-0"
+                  />
+                  <label htmlFor="guide-terms-checkbox" className="text-sm text-gray-700 cursor-pointer">
+                    我已阅读并同意{' '}
+                    <a 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); alert('《旅行管家服务协议》详情'); }}
+                      className="text-blue-500 underline hover:text-blue-600"
+                    >
+                      《旅行管家服务协议》
+                    </a>
+                  </label>
+                </div>
+              </div>
             )}
-            {currentStep < 5 ? (
-              <button
-                onClick={() => setCurrentStep(currentStep + 1)}
-                disabled={!canProceedToNextStep()}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                下一步
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity"
-              >
-                提交审核
-              </button>
-            )}
+            
+            <div className="flex gap-3">
+              {currentStep > 1 && (
+                <button
+                  onClick={() => setCurrentStep(currentStep - 1)}
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  上一步
+                </button>
+              )}
+              {currentStep < 5 ? (
+                <button
+                  onClick={() => setCurrentStep(currentStep + 1)}
+                  disabled={!canProceedToNextStep()}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  下一步
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={!agreedToTerms}
+                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  提交审核
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

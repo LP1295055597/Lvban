@@ -3,10 +3,10 @@ import { MapPin, Star, Award, Search, MessageCircle, Shield, Navigation, Heart, 
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { GuideDetail } from './GuideDetail';
 import { ChatDialog } from './ChatDialog';
-import { getPointsLevel } from '../data/pointsSystem';
 
 interface GuideOrdersProps {
   userLocation: { latitude: number; longitude: number; city?: string } | null;
+  touristVerified?: boolean;
 }
 
 interface Guide {
@@ -23,11 +23,12 @@ interface Guide {
   location: string;
   languages: string[];
   isCertified?: boolean;
-  points?: number;
   reviews: Review[];
   hasVehicle?: boolean;
   vehicleType?: string;
   vehiclePrice?: number; // 车辆价格（按天计价）
+  vehicleMileageLimit?: number; // 车辆每日里程限制（公里）
+  grabbedTime?: string; // 抢单时间
 }
 
 interface Review {
@@ -55,7 +56,6 @@ const mockGuides: Guide[] = [
     location: '丽江古城',
     languages: ['普通话', '纳西语', '英语'],
     isCertified: true,
-    points: 1500,
     reviews: [],
     hasVehicle: false
   },
@@ -72,11 +72,11 @@ const mockGuides: Guide[] = [
     servicePrice: '150',
     location: '丽江市区',
     languages: ['普通话', '纳西语'],
-    points: 5200,
     reviews: [],
     hasVehicle: true,
     vehicleType: '别克GL8',
-    vehiclePrice: 300 // 按天计价
+    vehiclePrice: 300, // 按天计价
+    vehicleMileageLimit: 100 // 每日限制100公里
   },
   {
     id: 3,
@@ -108,15 +108,15 @@ const mockGuides: Guide[] = [
     location: '丽江古城',
     languages: ['普通话', '纳西语', '英语'],
     isCertified: true,
-    points: 3200,
     reviews: [],
     hasVehicle: true,
     vehicleType: '丰田汉兰达',
-    vehiclePrice: 250 // 按天计价
+    vehiclePrice: 250, // 按天计价
+    vehicleMileageLimit: 100 // 每日限制100公里
   }
 ];
 
-export function GuideOrders({ userLocation }: GuideOrdersProps) {
+export function GuideOrders({ userLocation, touristVerified }: GuideOrdersProps) {
   const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
   const [showChat, setShowChat] = useState(false);
   const [chatGuide, setChatGuide] = useState<Guide | null>(null);
@@ -128,7 +128,8 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
   const [filterVehicle, setFilterVehicle] = useState<string>('全部');
   const [showFilters, setShowFilters] = useState(false); // 默认隐藏
   const [showSkillsExpanded, setShowSkillsExpanded] = useState(false); // 专业技能默认收起
-  
+  const [localTouristVerified, setLocalTouristVerified] = useState(touristVerified);
+
   // 需求填写相关状态
   const [requestDate, setRequestDate] = useState('');
   const [requestTime, setRequestTime] = useState('全天');
@@ -136,9 +137,10 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
   const [femaleCount, setFemaleCount] = useState(0);
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [isMatched, setIsMatched] = useState(false); // 是否已匹配
+  const [grabbedGuides, setGrabbedGuides] = useState<Guide[]>([]); // 抢单的旅行管家列表
   
   // Tab切换
-  const [activeTab, setActiveTab] = useState<'match' | 'browse'>('match'); // 'match'智能匹配 'browse'浏览地陪
+  const [activeTab, setActiveTab] = useState<'match' | 'browse'>('match'); // 'match'智能匹配 'browse'浏览旅行管家
 
   const allSkills = ['全部', '摄影高手', '美食专家', '历史讲解', '自驾向导', '户外专家'];
   const priceRanges = [
@@ -150,7 +152,7 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
     { label: '200元以上', min: 200, max: Infinity }
   ];
 
-  // 智能匹配模式：根据筛选条件匹配地陪
+  // 智能匹配模式：根据筛选条件匹配旅行管家
   const matchedGuides = mockGuides.filter(guide => {
     const skillMatch = filterSkill === '全部' || guide.skills.includes(filterSkill);
     const certifiedMatch = filterCertified === '全部' || (filterCertified === '是' ? guide.isCertified : !guide.isCertified);
@@ -169,11 +171,11 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
     return skillMatch && certifiedMatch && genderMatch && priceMatch && vehicleMatch;
   });
 
-  // 浏览地陪模式：根据用户距离和地陪积分推荐（默认不受筛选器影响）
+  // 浏览旅行管家模式：根据用户距离推荐（默认不受筛选器影响）
   const browseGuides = mockGuides.filter(guide => {
     // 仅在用户主动搜索或使用筛选器时才应用筛选
     if (searchQuery === '' && !showFilters) {
-      // 初始状态：显示所有地陪，按积分和距离排序
+      // 初始状态：显示所有旅行管家，按评分和距离排序
       return true;
     }
     
@@ -202,19 +204,16 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
     return searchMatch;
   });
 
-  // 浏览地陪模式：根据距离和积分排序（积分优先，评分次之）
+  // 浏览旅行管家模式：根据评分和订单数排序
   const sortedGuidesForBrowse = [...browseGuides].sort((a, b) => {
-    // 假设所有地陪都在丽江市内，距离都比较近，主要根据积分排序
-    const pointsA = a.points || 0;
-    const pointsB = b.points || 0;
-    
-    // 积分高的排在前面
-    if (pointsB !== pointsA) {
-      return pointsB - pointsA;
+    // 假设所有旅行管家都在丽江市内，距离都比较近，主要根据评分排序
+    // 评分高的排在前面
+    if (b.rating !== a.rating) {
+      return b.rating - a.rating;
     }
     
-    // 积分相同，则按评分排序
-    return b.rating - a.rating;
+    // 评分相同，则按订单数排序
+    return b.orderCount - a.orderCount;
   });
 
   const featuredGuide = sortedGuidesForBrowse[0]; // 使用排序后的列表
@@ -228,15 +227,48 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
 
   const handleMatch = () => {
     if (!requestDate) {
-      alert('请选择需要地陪的日期');
+      alert('请选择需要旅行管家的日期');
       return;
     }
     setIsMatched(true);
-    // 滚动到地陪列表
+    
+    // 模拟旅行管家抢单（实际项目中从后端获取）
+    setTimeout(() => {
+      // 模拟2位旅行管家抢单
+      const grabbed: Guide[] = [
+        {
+          ...mockGuides[1], // 和师傅
+          grabbedTime: new Date(Date.now() - 2 * 60 * 1000).toISOString() // 2分钟前抢单
+        },
+        {
+          ...mockGuides[0], // 阿秀
+          grabbedTime: new Date(Date.now() - 5 * 60 * 1000).toISOString() // 5分钟前抢单
+        }
+      ];
+      setGrabbedGuides(grabbed);
+    }, 2000); // 2秒后模拟抢单
+    
+    // 滚动到旅行管家列表
     setTimeout(() => {
       const element = document.getElementById('guide-list');
       element?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
+  };
+
+  const getTimeAgo = (timestamp: string) => {
+    const now = Date.now();
+    const time = new Date(timestamp).getTime();
+    const diff = now - time;
+    
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return '刚刚';
+    if (minutes < 60) return `${minutes}分钟前`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}小时前`;
+    
+    const days = Math.floor(hours / 24);
+    return `${days}天前`;
   };
 
   const handleQuickBook = (guide: Guide) => {
@@ -275,7 +307,7 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
               }`}
             >
               <Search className="w-4 h-4" />
-              <span className="font-medium">浏览地陪</span>
+              <span className="font-medium">浏览旅行管家</span>
             </button>
           </div>
         </div>
@@ -552,7 +584,7 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
                       <div className="flex-1">
                         <p className="text-xs text-green-800 mb-0.5">匹配成功！</p>
                         <p className="text-xs text-green-600">
-                          为您推荐了 {matchedGuides.length} 位符合条件的地陪，点击地陪卡片即可快速预约
+                          为您推荐了 {matchedGuides.length} 位符合条件的旅行管家，点击旅行管家卡片即可快速预约
                         </p>
                       </div>
                     </div>
@@ -562,23 +594,144 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
             </div>
           </div>
 
-          {/* 匹配结果地陪列表 - 仅在匹配成功后显示 */}
+          {/* 匹配结果旅行管家列表 - 仅在匹配成功后显示 */}
           {isMatched && matchedGuides.length > 0 && (
             <div className="px-4 mt-4 space-y-3" id="guide-list">
+              {/* 抢单旅行管家列表 - 显示在匹配结果上方 */}
+              {grabbedGuides.length > 0 && (
+                <div className="relative animate-slide-down">
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-red-500/20 to-pink-500/20 blur-2xl rounded-[2rem]"></div>
+                  <div className="relative bg-white/90 backdrop-blur-xl rounded-[2rem] p-4 shadow-xl border border-white/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center animate-pulse">
+                          <Sparkles className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-base text-gray-800">抢单旅行管家</h3>
+                          <p className="text-xs text-gray-500">有 {grabbedGuides.length} 位旅行管家抢单成功</p>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-3 py-1 rounded-full shadow-lg shadow-orange-500/30">
+                        优先推荐
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-3 mb-3 border border-orange-200">
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm">🔥</span>
+                        <div className="flex-1 text-xs text-orange-800">
+                          <p className="font-medium mb-1">这些旅行管家主动抢单，响应更快！</p>
+                          <p className="text-orange-700">按抢单时间顺序显示，越早抢单越靠前，建议优先选择</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {grabbedGuides
+                        .sort((a, b) => {
+                          const timeA = a.grabbedTime ? new Date(a.grabbedTime).getTime() : 0;
+                          const timeB = b.grabbedTime ? new Date(b.grabbedTime).getTime() : 0;
+                          return timeA - timeB;
+                        })
+                        .map((guide, index) => (
+                          <button
+                            key={guide.id}
+                            onClick={() => setSelectedGuide(guide)}
+                            className="w-full bg-gradient-to-br from-white via-orange-50/30 to-white rounded-2xl p-3.5 hover:shadow-xl transition-all group border-2 border-orange-200 relative overflow-hidden"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/5 to-orange-500/0"></div>
+                            
+                            <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white text-xs shadow-lg shadow-orange-500/50">
+                              #{index + 1}
+                            </div>
+
+                            <div className="flex gap-3.5 relative">
+                              <div className="relative flex-shrink-0">
+                                <div className="w-18 h-18 rounded-2xl overflow-hidden shadow-md ring-2 ring-orange-200">
+                                  <ImageWithFallback
+                                    src={guide.avatar}
+                                    alt={guide.name}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                  />
+                                </div>
+                                {guide.isCertified && (
+                                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+                                    <Shield className="w-3 h-3 text-white" />
+                                  </div>
+                                )}
+                                <div className="absolute -top-2 -left-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap animate-pulse">
+                                  {guide.grabbedTime && getTimeAgo(guide.grabbedTime)}抢单
+                                </div>
+                              </div>
+
+                              <div className="flex-1 min-w-0 text-left">
+                                <div className="flex items-start justify-between mb-0.5">
+                                  <div>
+                                    <div className="flex items-center gap-1.5">
+                                      <h4 className="text-sm text-gray-800">{guide.name}</h4>
+                                      <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-1.5 py-0.5 rounded">
+                                        已抢单
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500">{guide.age}岁 · {guide.gender}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm text-gray-800">¥{guide.servicePrice}</div>
+                                    <div className="text-xs text-gray-500">元/小时</div>
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-1.5 mb-1.5 flex-wrap">
+                                  {guide.skills.slice(0, 3).map((skill, skillIndex) => (
+                                    <span key={skillIndex} className="text-xs bg-gradient-to-r from-orange-500/10 to-red-500/10 text-orange-700 px-2 py-0.5 rounded-full border border-orange-200">
+                                      {skill}
+                                    </span>
+                                  ))}
+                                </div>
+
+                                <div className="flex items-center gap-2.5">
+                                  <div className="flex items-center gap-0.5">
+                                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                    <span className="text-xs text-gray-700">{guide.rating}</span>
+                                  </div>
+                                  <div className="flex items-center gap-0.5">
+                                    <Award className="w-3 h-3 text-orange-400" />
+                                    <span className="text-xs text-gray-700">{guide.orderCount}单</span>
+                                  </div>
+                                  {guide.hasVehicle && (
+                                    <div className="flex items-center gap-0.5">
+                                      <Car className="w-3 h-3 text-green-500" />
+                                      <span className="text-xs text-gray-700">{guide.vehicleType}</span>
+                                    </div>
+                                  )}
+                                  <div className="ml-auto flex items-center gap-0.5 text-orange-600">
+                                    <Sparkles className="w-3 h-3 animate-pulse" />
+                                    <span className="text-xs font-medium">快速响应</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 智能匹配结果 */}
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 blur-2xl rounded-[2rem]"></div>
                 <div className="relative bg-white/90 backdrop-blur-xl rounded-[2rem] p-4 shadow-xl border border-white/20">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="text-base text-gray-800">匹配结果</h3>
-                      <p className="text-xs text-gray-500">为您找到 {matchedGuides.length} 位地陪</p>
+                      <h3 className="text-base text-gray-800">智能匹配结果</h3>
+                      <p className="text-xs text-gray-500">为您找到 {matchedGuides.length} 位旅行管家</p>
                     </div>
                   </div>
 
                   <div className="space-y-2.5">
                     {matchedGuides.map((guide) => {
-                      const level = guide.points ? getPointsLevel(guide.points) : null;
-                      
                       return (
                         <button
                           key={guide.id}
@@ -640,12 +793,6 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
                                     <span className="text-xs text-gray-700">{guide.vehicleType}</span>
                                   </div>
                                 )}
-                                {level && (
-                                  <div className="flex items-center gap-0.5">
-                                    <div className={`w-3 h-3 rounded-full ${level.badgeColor}`}></div>
-                                    <span className="text-xs text-gray-700">{level.name}</span>
-                                  </div>
-                                )}
                               </div>
                             </div>
                           </div>
@@ -660,10 +807,10 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
         </>
       )}
 
-      {/* 浏览地陪模式 */}
+      {/* 浏览旅行管家模式 */}
       {activeTab === 'browse' && (
         <>
-          {/* Search Bar - 在浏览地陪下方 */}
+          {/* Search Bar - 在浏览旅行管家下方 */}
           <div className="px-4 pb-3">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-xl rounded-3xl"></div>
@@ -673,7 +820,7 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="搜索地陪名字或技能..."
+                  placeholder="搜索旅行管家名字或技能..."
                   className="flex-1 bg-transparent outline-none text-gray-700 placeholder:text-gray-400"
                 />
                 <button
@@ -688,7 +835,7 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
             </div>
           </div>
 
-          {/* Filters - 浏览地陪模式的筛选器 */}
+          {/* Filters - 浏览旅行管家模式的筛选器 */}
           {showFilters && (
             <div className="px-4 pb-4 space-y-3 animate-slide-down">
               {/* 重要筛选：平台认证和性别 */}
@@ -832,7 +979,7 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
                   {/* Header */}
                   <div className="p-5 pb-3">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-gray-800">推荐地陪</h3>
+                      <h3 className="text-gray-800">推荐旅行管家</h3>
                       {featuredGuide.isCertified && (
                         <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full flex items-center gap-1.5 text-xs shadow-lg shadow-blue-500/30">
                           <Shield className="w-3.5 h-3.5" />
@@ -840,7 +987,7 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
                         </div>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">本周推荐地陪</p>
+                    <p className="text-sm text-gray-500">本周推荐旅行管家</p>
                   </div>
 
                   {/* Main Card */}
@@ -913,15 +1060,13 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
               <div className="relative bg-white/90 backdrop-blur-xl rounded-[2rem] p-5 shadow-xl border border-white/20">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-gray-800">更多地陪</h3>
-                    <p className="text-sm text-gray-500">共 {otherGuides.length} 位地陪</p>
+                    <h3 className="text-gray-800">更多旅行管家</h3>
+                    <p className="text-sm text-gray-500">共 {otherGuides.length} 位旅行管家</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   {otherGuides.map((guide) => {
-                    const level = guide.points ? getPointsLevel(guide.points) : null;
-                    
                     return (
                       <button
                         key={guide.id}
@@ -977,10 +1122,10 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
                                 <Award className="w-3.5 h-3.5 text-orange-400" />
                                 <span className="text-xs text-gray-700">{guide.orderCount}单</span>
                               </div>
-                              {level && (
+                              {guide.hasVehicle && (
                                 <div className="flex items-center gap-1">
-                                  <div className={`w-3.5 h-3.5 rounded-full ${level.badgeColor}`}></div>
-                                  <span className="text-xs text-gray-700">{level.name}</span>
+                                  <Car className="w-3.5 h-3.5 text-green-500" />
+                                  <span className="text-xs text-gray-700">{guide.vehicleType}</span>
                                 </div>
                               )}
                             </div>
@@ -1000,8 +1145,11 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
       {selectedGuide && (
         <GuideDetail
           guide={selectedGuide}
+          userLocation={userLocation}
+          touristVerified={localTouristVerified}
           onClose={() => setSelectedGuide(null)}
-          onChatClick={() => handleChatClick(selectedGuide)}
+          onChat={() => handleChatClick(selectedGuide)}
+          onTouristVerified={() => setLocalTouristVerified(true)}
         />
       )}
 
@@ -1014,32 +1162,6 @@ export function GuideOrders({ userLocation }: GuideOrdersProps) {
           }}
         />
       )}
-
-      <style jsx>{`
-        @keyframes slide-down {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-slide-down {
-          animation: slide-down 0.3s ease-out;
-        }
-        
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </div>
   );
 }

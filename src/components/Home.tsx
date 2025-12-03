@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Users, Briefcase, MapPin, Search, Play, Star, Plus, Navigation, Heart, BookmarkPlus } from 'lucide-react';
+import { Users, Briefcase, MapPin, Search, Play, Star, Plus, Navigation, Heart, BookmarkPlus, Map } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { AttractionDetail } from './AttractionDetail';
 import { VideoFeed } from './VideoFeed';
 import { PublishContent } from './PublishContent';
 import { CitySelector } from './CitySelector';
+import { BaiduMapNavigation } from './BaiduMapNavigation';
+import { TravelMap } from './TravelMap';
 import { CityData, getNearestCity, getDefaultCity } from '../data/cityData';
 
 interface HomeProps {
@@ -29,13 +31,14 @@ interface Attraction {
 }
 
 export function Home({ userLocation, onNavigate }: HomeProps) {
-  const [selectedTab, setSelectedTab] = useState<'explore' | 'video'>('explore');
   const [selectedAttraction, setSelectedAttraction] = useState<Attraction | null>(null);
   const [showPublish, setShowPublish] = useState(false);
   const [showCitySelector, setShowCitySelector] = useState(false);
+  const [showTravelMap, setShowTravelMap] = useState(false);
   const [currentCity, setCurrentCity] = useState<CityData>(getDefaultCity());
   const [scenicSpots, setScenicSpots] = useState<Attraction[]>([]);
   const [foods, setFoods] = useState<Attraction[]>([]);
+  const [navigationTarget, setNavigationTarget] = useState<Attraction | null>(null);
 
   useEffect(() => {
     if (userLocation) {
@@ -142,43 +145,10 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Tab Switcher */}
-      <div className="px-4 pt-4 pb-3">
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-1.5 flex gap-1 shadow-md border border-white/20">
-          <button
-            onClick={() => setSelectedTab('explore')}
-            className={`flex-1 py-2.5 rounded-2xl transition-all ${
-              selectedTab === 'explore'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/30'
-                : 'text-gray-600 hover:bg-white/50'
-            }`}
-          >
-            发现
-          </button>
-          <button
-            onClick={() => setSelectedTab('video')}
-            className={`flex-1 py-2.5 rounded-2xl transition-all ${
-              selectedTab === 'video'
-                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/30'
-                : 'text-gray-600 hover:bg-white/50'
-            }`}
-          >
-            精彩推荐
-          </button>
-        </div>
-      </div>
-
       {/* Content */}
-      {selectedTab === 'video' && (
-        <div className="px-4">
-          <VideoFeed />
-        </div>
-      )}
-
-      {selectedTab === 'explore' && (
-        <div className="px-4 space-y-4">
+      <div className="px-4 space-y-4">
           {/* Quick Actions - 移到首屏 */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <button
               onClick={() => onNavigate('mates')}
               className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all group"
@@ -189,7 +159,7 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
                   <Users className="w-5 h-5 text-white" />
                 </div>
                 <h3 className="text-white text-sm mb-0.5">找旅行搭子</h3>
-                <p className="text-white/80 text-xs">结伴同行更有趣</p>
+                <p className="text-white/80 text-xs">结伴同行</p>
               </div>
             </button>
 
@@ -202,8 +172,22 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
                 <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-2">
                   <Briefcase className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-white text-sm mb-0.5">预约地陪</h3>
-                <p className="text-white/80 text-xs">本地向导带你游</p>
+                <h3 className="text-white text-sm mb-0.5">旅行管家</h3>
+                <p className="text-white/80 text-xs">本地向导</p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setShowTravelMap(true)}
+              className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-400 to-blue-500"></div>
+              <div className="relative p-4 text-left">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-2">
+                  <Map className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-white text-sm mb-0.5">旅行地图</h3>
+                <p className="text-white/80 text-xs">智能规划</p>
               </div>
             </button>
           </div>
@@ -265,7 +249,13 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
                             </div>
                           </div>
                         </div>
-                        <button className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNavigationTarget(featuredAttraction);
+                          }}
+                          className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+                        >
                           <Navigation className="w-5 h-5 text-white" />
                         </button>
                       </div>
@@ -300,7 +290,13 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
                       <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5">
                         <span className="text-xs text-gray-700">📍 您的位置</span>
                       </div>
-                      <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-xs hover:shadow-lg transition-all">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNavigationTarget(featuredAttraction);
+                        }}
+                        className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-xs hover:shadow-lg transition-all"
+                      >
                         开始导航
                       </button>
                     </div>
@@ -327,54 +323,73 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
               {/* Circular Layout Grid */}
               <div className="grid grid-cols-2 gap-3">
                 {trendingSpots.map((spot, index) => (
-                  <button
+                  <div
                     key={spot.id}
-                    onClick={() => setSelectedAttraction(spot)}
                     className="relative aspect-square rounded-3xl overflow-hidden shadow-lg group"
                   >
-                    <ImageWithFallback
-                      src={spot.image}
-                      alt={spot.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-                    
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <div className="bg-white/20 backdrop-blur-md rounded-2xl px-3 py-2 mb-2">
-                        <h4 className="text-white text-sm line-clamp-1">{spot.name}</h4>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md rounded-full px-2.5 py-1">
-                          <MapPin className="w-3 h-3 text-white" />
-                          <span className="text-white text-xs">{spot.distance}</span>
+                    <button
+                      onClick={() => setSelectedAttraction(spot)}
+                      className="absolute inset-0 w-full h-full"
+                    >
+                      <ImageWithFallback
+                        src={spot.image}
+                        alt={spot.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                      
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <div className="bg-white/20 backdrop-blur-md rounded-2xl px-3 py-2 mb-2">
+                          <h4 className="text-white text-sm line-clamp-1">{spot.name}</h4>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md rounded-full px-2.5 py-1">
-                          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                          <span className="text-white text-xs">{spot.rating}</span>
+                        <div className="flex items-center justify-between">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNavigationTarget(spot);
+                            }}
+                            className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md rounded-full px-2.5 py-1 hover:bg-white/30 transition-colors"
+                          >
+                            <MapPin className="w-3 h-3 text-white" />
+                            <span className="text-white text-xs">{spot.distance}</span>
+                            <Navigation className="w-3 h-3 text-white" />
+                          </button>
+                          <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md rounded-full px-2.5 py-1">
+                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                            <span className="text-white text-xs">{spot.rating}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Category Badge */}
-                    <div className="absolute top-3 left-3">
-                      <div className={`backdrop-blur-md rounded-full px-2.5 py-1 ${
-                        spot.category === 'food'
-                          ? 'bg-orange-500/80'
-                          : 'bg-blue-500/80'
-                      }`}>
-                        <span className="text-white text-xs">
-                          {spot.category === 'food' ? '🍜 美食' : '🏔️ 景点'}
-                        </span>
+                      {/* Category Badge */}
+                      <div className="absolute top-3 left-3">
+                        <div className={`backdrop-blur-md rounded-full px-2.5 py-1 ${
+                          spot.category === 'food'
+                            ? 'bg-orange-500/80'
+                            : 'bg-blue-500/80'
+                        }`}>
+                          <span className="text-white text-xs">
+                            {spot.category === 'food' ? '🍜 美食' : '🏔️ 景点'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
           </div>
+
+        {/* 精彩推荐视频区域 */}
+        <div className="mt-6">
+          <div className="mb-4">
+            <h3 className="text-gray-800 mb-1">🎬 精彩推荐</h3>
+            <p className="text-sm text-gray-500">发现更多旅行灵感</p>
+          </div>
+          <VideoFeed />
         </div>
-      )}
+      </div>
 
       {/* Floating Action Button */}
       <button
@@ -404,6 +419,27 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
           currentCity={currentCity}
           onCityChange={handleCityChange}
           onClose={() => setShowCitySelector(false)}
+        />
+      )}
+
+      {navigationTarget && (
+        <BaiduMapNavigation
+          destination={{
+            name: navigationTarget.name,
+            latitude: currentCity.location.latitude,
+            longitude: currentCity.location.longitude,
+            address: navigationTarget.location
+          }}
+          origin={userLocation}
+          onClose={() => setNavigationTarget(null)}
+        />
+      )}
+
+      {showTravelMap && (
+        <TravelMap
+          selectedCity={currentCity.cityName}
+          userLocation={userLocation}
+          onClose={() => setShowTravelMap(false)}
         />
       )}
     </div>

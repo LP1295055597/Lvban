@@ -302,7 +302,7 @@ export function LocationPicker({ userLocation, onSelect, onClose }: LocationPick
 
             <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
               <p className="text-yellow-800 text-sm">
-                💡 提示：请确保填写的地址准确，方便地陪准时到达
+                💡 提示：请确保填写的地址准确，方便旅行管家准时到达
               </p>
             </div>
 
