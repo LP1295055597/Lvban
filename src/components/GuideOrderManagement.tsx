@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Bell, Clock, MapPin, Users, Calendar, FileText, X, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
+import { Bell, Clock, MapPin, Users, Calendar, FileText, X, Sparkles, CheckCircle, AlertCircle, Award, TrendingUp, Info } from 'lucide-react';
+import { GuideLevelInfo } from './GuideLevelInfo';
+import { 
+  calculateLevel, 
+  calculatePoints, 
+  calculateCommissionRate, 
+  GUIDE_LEVELS, 
+  formatCommissionRate,
+  getLevelProgress,
+  getPointsToNextLevel 
+} from '../utils/guideLevelSystem';
 
 interface OrderRequest {
   id: string;
@@ -43,6 +53,28 @@ export function GuideOrderManagement({ hasNewOrders = false, onOrderGrabbed }: G
   const [selectedBooking, setSelectedBooking] = useState<GrabbedOrder | null>(null);
   const [activeTab, setActiveTab] = useState<'available' | 'booking' | 'confirmed'>('available');
   const [showNotification, setShowNotification] = useState(false);
+  const [showLevelInfo, setShowLevelInfo] = useState(false);
+
+  // 地陪等级数据（模拟数据，实际应从后端获取）
+  const guideStats = {
+    orderCount: 156,
+    goodReviewCount: 140,
+    hasPhotography: true,
+    hasVehicle: false,
+    isVerified: true
+  };
+  
+  const totalPoints = calculatePoints(
+    guideStats.orderCount,
+    guideStats.goodReviewCount,
+    guideStats.hasPhotography,
+    guideStats.hasVehicle
+  );
+  const guideLevel = calculateLevel(totalPoints);
+  const levelInfo = GUIDE_LEVELS[guideLevel];
+  const commissionRate = calculateCommissionRate(guideLevel, guideStats.isVerified);
+  const levelProgress = getLevelProgress(totalPoints);
+  const pointsToNext = getPointsToNextLevel(totalPoints);
 
   // 模拟新订单推送
   useEffect(() => {
@@ -230,26 +262,88 @@ export function GuideOrderManagement({ hasNewOrders = false, onOrderGrabbed }: G
         </div>
       )}
 
-      {/* Header */}
+      {/* Level Info Card */}
       <div className="px-4 pt-4 pb-3">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 blur-xl rounded-2xl"></div>
+          <div className={`absolute inset-0 ${
+            guideLevel === 'gold' ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20' :
+            guideLevel === 'senior' ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20' :
+            guideLevel === 'intermediate' ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20' :
+            'bg-gradient-to-r from-gray-500/20 to-slate-500/20'
+          } blur-xl rounded-2xl`}></div>
           <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-4 shadow-lg border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-gray-800 mb-1">订单功能</h2>
-                <p className="text-sm text-gray-500">抢单接单，开启旅程</p>
-              </div>
-              {availableOrders.length > 0 && (
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                    <Bell className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-white shadow-lg">
-                    {availableOrders.length}
-                  </div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-14 h-14 ${levelInfo.bgColor} rounded-2xl flex items-center justify-center text-2xl`}>
+                  {levelInfo.icon}
                 </div>
-              )}
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className={`${levelInfo.color}`}>{levelInfo.name}旅行管家</h3>
+                    {guideStats.isVerified && (
+                      <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-xs flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        已认证
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500">{totalPoints}积分</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowLevelInfo(true)}
+                className="text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                <Info className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-2 text-xs text-gray-600">
+                <span>等级进度</span>
+                {pointsToNext !== null && (
+                  <span>再获得 {pointsToNext} 积分升级</span>
+                )}
+              </div>
+              <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={`absolute inset-y-0 left-0 bg-gradient-to-r ${
+                    guideLevel === 'gold' ? 'from-amber-400 to-amber-500' :
+                    guideLevel === 'senior' ? 'from-purple-400 to-purple-500' :
+                    guideLevel === 'intermediate' ? 'from-blue-400 to-blue-500' :
+                    'from-gray-400 to-gray-500'
+                  } rounded-full transition-all duration-500`}
+                  style={{ width: `${levelProgress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-3 border border-blue-100">
+                <div className={`${levelInfo.color} text-xl mb-1`}>
+                  {formatCommissionRate(commissionRate)}
+                </div>
+                <div className="text-xs text-gray-600 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>平台抽成</span>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 border border-purple-100">
+                <div className="text-purple-600 text-xl mb-1">{guideStats.orderCount}</div>
+                <div className="text-xs text-gray-600 flex items-center gap-1">
+                  <Award className="w-3 h-3" />
+                  <span>完成订单</span>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-3 border border-amber-100">
+                <div className="text-amber-600 text-xl mb-1">{guideStats.goodReviewCount}</div>
+                <div className="text-xs text-gray-600 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  <span>好评数量</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -719,7 +813,7 @@ export function GuideOrderManagement({ hasNewOrders = false, onOrderGrabbed }: G
                     <div className="flex-1 text-sm text-amber-800">
                       <p className="font-medium mb-1">抢单说明</p>
                       <ul className="space-y-1 text-xs text-amber-700">
-                        <li>• 抢单成功后，您的信息将展示给游客</li>
+                        <li>• 抢单成功后，您的信息将展示游客</li>
                         <li>• 游客会在24小时内选择旅行管家</li>
                         <li>• 被选中后系统将通知您确认订单</li>
                         <li>• 请确保在服务时间内有空</li>
@@ -748,6 +842,11 @@ export function GuideOrderManagement({ hasNewOrders = false, onOrderGrabbed }: G
             </div>
           </div>
         </div>
+      )}
+
+      {/* Level Info Modal */}
+      {showLevelInfo && (
+        <GuideLevelInfo onClose={() => setShowLevelInfo(false)} />
       )}
     </div>
   );

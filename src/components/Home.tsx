@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Briefcase, MapPin, Search, Play, Star, Plus, Navigation, Heart, BookmarkPlus, Map } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { AttractionDetail } from './AttractionDetail';
+import { AttractionDetailPanel } from './AttractionDetailPanel';
 import { VideoFeed } from './VideoFeed';
 import { PublishContent } from './PublishContent';
 import { CitySelector } from './CitySelector';
@@ -102,7 +102,7 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
         '注意饮食卫生',
         '如有特殊饮食要求，请提前告知商家'
       ],
-      audioGuide: `${food.name}是${city.cityName}的传统美食。${food.description}这道美食承载着当地的饮食文化和历史传统，是来${city.cityName}必尝的特色菜品。推荐您到${food.restaurant}品尝，这里的制作手法最为正宗。`
+      audioGuide: `${food.name}是${city.cityName}的传统美食。${food.description}这道美食承载着���地的饮食文化和历史传统，是来${city.cityName}必尝的特色菜品。推荐您到${food.restaurant}品尝，这里的制作手法最为正宗。`
     }));
 
     setScenicSpots(scenicData);
@@ -210,9 +210,9 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
 
                 {/* Main Image Card */}
                 <div className="px-5 pb-4">
-                  <button
+                  <div
                     onClick={() => setSelectedAttraction(featuredAttraction)}
-                    className="relative w-full aspect-[4/5] rounded-3xl overflow-hidden shadow-xl group"
+                    className="relative w-full aspect-[4/5] rounded-3xl overflow-hidden shadow-xl group cursor-pointer"
                   >
                     <ImageWithFallback
                       src={featuredAttraction.image}
@@ -266,7 +266,7 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
                       <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
                       <span className="text-xs text-gray-800">{Math.floor(Math.random() * 500 + 100)}</span>
                     </div>
-                  </button>
+                  </div>
                 </div>
 
                 {/* Bottom Map Preview */}
@@ -401,7 +401,7 @@ export function Home({ userLocation, onNavigate }: HomeProps) {
 
       {/* Dialogs */}
       {selectedAttraction && (
-        <AttractionDetail
+        <AttractionDetailPanel
           attraction={selectedAttraction}
           onClose={() => setSelectedAttraction(null)}
         />

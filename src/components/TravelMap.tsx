@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, MapPin, Navigation, Clock, DollarSign, Camera, Video, ChevronRight } from 'lucide-react';
+import { X, MapPin, Navigation, Clock, DollarSign, Camera, Video, ChevronRight, Star, Volume2, VolumeX, Info, Heart } from 'lucide-react';
 import lijiangMapImage from 'figma:asset/1a233cd65b14f51c4c91304408acd85d0fc50d24.png';
 import lijiangOldTownImage from 'figma:asset/ae6c0448caddc5af6967743b9b92f82c9134225a.png';
+import { AttractionDetailPanel } from './AttractionDetailPanel';
 
 interface TravelMapProps {
   onClose: () => void;
@@ -22,8 +23,12 @@ interface Attraction {
   tips: string[];
   images: string[];
   hasDetailMap?: boolean;
-  relatedVideos?: any[];
   category: string;
+  rating?: number;
+  location?: string;
+  openTime?: string;
+  highlights?: string[];
+  audioGuide?: string;
 }
 
 export function TravelMap({ onClose, selectedCity = '丽江', userLocation }: TravelMapProps) {
@@ -62,89 +67,161 @@ export function TravelMap({ onClose, selectedCity = '丽江', userLocation }: Tr
       name: '拉市海',
       position: { x: 15, y: 70 },
       price: '30元',
+      rating: 4.6,
+      location: '丽江市玉龙县',
+      openTime: '08:00-18:00',
       description: '拉市海是云南省第一个以"湿地"命名的自然保护区，每年冬季有数万只候鸟来此越冬。',
-      tips: ['骑马划船体验', '观鸟最佳季节11-3月', '建议游玩时间3-4小时'],
+      highlights: [
+        '云南省第一个湿地自然保护区',
+        '冬季候鸟越冬栖息地，观鸟胜地',
+        '可以体验骑马、划船等活动',
+        '茶马古道的重要站点'
+      ],
+      tips: ['骑马划船体验', '观鸟最佳季节11-3月', '建议游玩时间3-4小时', '注意防晒和保暖'],
       images: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'],
       category: '自然风光',
-      relatedVideos: []
+      audioGuide: '欢迎来到拉市海。拉市海是云南省第一个以湿地命名的自然保护区，每年冬季有数万只候鸟来此越冬，是观鸟的绝佳去处。这里也是茶马古道的重要站点，您可以骑马体验当年马帮的艰辛旅程，也可以乘船游览湖光山色。建议您在11月到次年3月的观鸟季节前来，可以看到成群的候鸟在此栖息。祝您旅途愉快！'
     },
     {
       id: 'old-town',
       name: '丽江古城',
       position: { x: 42, y: 68 },
       price: '免费',
+      rating: 4.8,
+      location: '丽江市古城区',
+      openTime: '全天开放',
       description: '世界文化遗产，茶马古道重镇，有800多年历史。古城布局错综复杂，是中国保存最完整的少数民族古城。',
-      tips: ['夜景最美', '四方街是中心', '推荐清晨或傍晚游览'],
+      highlights: [
+        '世界文化遗产，有800多年历史',
+        '中国保存最完整的少数民族古城',
+        '四方街是古城的心脏和商贸中心',
+        '夜景绝美，酒吧街文化丰富'
+      ],
+      tips: ['夜景最美', '四方街是中心', '推荐清晨或傍晚游览', '可以聘请导游了解纳西文化'],
       images: ['https://images.unsplash.com/photo-1528127269322-539801943592?w=800'],
       hasDetailMap: true,
       category: '历史古迹',
-      relatedVideos: []
+      audioGuide: '欢迎来到丽江古城。这座有着800多年历史的古城是世界文化遗产，也是茶马古道的重镇。古城布局错综复杂，街巷纵横交错，是中国保存最完整的少数民族古城。四方街是古城的心脏，是当年茶马古道上的商贸中心。建议您在清晨或傍晚时分游览，既能避开人流，又能感受古城的宁静与美丽。夜晚的古城别有一番风味，灯火阑珊，酒吧街热闹非凡。祝您在这里留下美好回忆！'
     },
     {
       id: 'shuhe',
       name: '束河古镇',
       position: { x: 52, y: 50 },
       price: '免费',
+      rating: 4.7,
+      location: '丽江市古城区束河街道',
+      openTime: '全天开放',
       description: '比丽江古城更加安静的古镇，是茶马古道上的重要驿站，保留了更原始的纳西族风情。',
-      tips: ['比古城安静', '适合摄影', '青龙桥是标志'],
+      highlights: [
+        '茶马古道上的重要驿站',
+        '比丽江古城更加安静原始',
+        '青龙桥是古镇的标志性建筑',
+        '适合摄影和体验纳西族文化'
+      ],
+      tips: ['比古城安静', '适合摄影', '青龙桥是标志', '可以骑马游览周边'],
       images: ['https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800'],
       category: '历史古迹',
-      relatedVideos: []
+      audioGuide: '欢迎来到束河古镇。这里比丽江古城更加安静，保留了更原始的纳西族风情。束河古镇是茶马古道上的重要驿站，有着悠久的历史。青龙桥是古镇的标志性建筑，古朴而优雅。这里适合摄影爱好者和喜欢安静氛围的游客，您可以在石板路上漫步，感受时光的沉淀，也可以在古镇周边骑马游览。祝您在这里度过愉快的时光！'
     },
     {
       id: 'baisha',
       name: '白沙古镇',
       position: { x: 28, y: 45 },
       price: '免费',
+      rating: 4.5,
+      location: '丽江市玉龙县白沙镇',
+      openTime: '08:00-18:00',
       description: '纳西族最早的聚居地，有著名的白沙壁画，是丽江最原始的古镇。',
-      tips: ['白沙壁画必看', '游客较少', '适合深度游'],
+      highlights: [
+        '纳西族最早的聚居地之一',
+        '保存完好的白沙壁画群',
+        '游客较少，适合深度游',
+        '可以体验最原始的纳西族文化'
+      ],
+      tips: ['白沙壁画必看', '游客较少', '适合深度游', '建议请导游讲解壁画'],
       images: ['https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800'],
       category: '历史古迹',
-      relatedVideos: []
+      audioGuide: '欢迎来到白沙古镇。这里是纳西族最早的聚居地之一，有着深厚的历史文化底蕴。著名的白沙壁画是这里的瑰宝，融合了汉、藏、纳西等多种文化元素，是研究纳西族历史文化的重要资料。由于游客较少，这里保留了最原始的古镇风貌，适合喜欢深度游的游客。建议您请一位导游讲解壁画，能更深入地了解这里的文化。祝您旅途愉快！'
     },
     {
       id: 'yulong-snow',
       name: '玉龙雪山',
       position: { x: 35, y: 25 },
       price: '进山费100元 + 大索道140元',
+      rating: 4.7,
+      location: '丽江市玉龙县',
+      openTime: '07:00-16:00',
       description: '海拔5596米的雪山，是纳西族心中的神山。拥有险、奇、美、秀著称于世。',
-      tips: ['需提前预约', '准备防寒衣物', '避免剧烈运动'],
+      highlights: [
+        '海拔5596米，纳西族的神山',
+        '终年积雪，景色壮观',
+        '可乘大索道直达海拔4506米',
+        '拥有丰富的植物垂直分布带'
+      ],
+      tips: ['需提前预约', '准备防寒衣物', '避免剧烈运动', '备好氧气瓶'],
       images: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'],
       category: '自然风光',
-      relatedVideos: []
+      audioGuide: '欢迎来到玉龙雪山。这座海拔5596米的雪山是纳西族心中的神山，终年积雪，以险、奇、美、秀著称于世。您可以乘坐大索道直达海拔4506米的地方，近距离感受雪山的壮丽。雪山拥有丰富的植物垂直分布带，从亚热带到寒���植物都能看到。由于海拔较高，请注意防寒保暖，避免剧烈运动，必要时使用氧气瓶。祝您登山顺利，留下难忘的回忆！'
     },
     {
       id: 'lugu-lake',
       name: '泸沽湖',
       position: { x: 85, y: 70 },
       price: '70元',
+      rating: 4.8,
+      location: '丽江市宁蒗县',
+      openTime: '全天开放',
       description: '被誉为"高原明珠"，是云南省海拔最高的湖泊，也是中国第三大深水湖泊。',
-      tips: ['观日出日落', '摩梭族走婚文化', '环湖骑行'],
+      highlights: [
+        '被誉为"高原明珠"',
+        '云南省海拔最高的湖泊',
+        '摩梭族走婚文化体验',
+        '日出日落景色绝美'
+      ],
+      tips: ['观日出日落', '摩梭族走婚文化', '环湖骑行', '建议安排2-3天游玩'],
       images: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'],
       category: '自然风光',
-      relatedVideos: []
+      audioGuide: '欢迎来到泸沽湖。这里被誉为"高原明珠"，是云南省海拔最高的湖泊，也是中国第三大深水湖泊。湖水清澈碧蓝，四周群山环绕，景色如画。这里是摩梭族的聚居地，保留着独特的走婚文化和母系社会传统。建议您观赏日出日落，那是泸沽湖最美的时刻。您还可以环湖骑行，感受湖光山色。建议安排2-3天时间深度游览。祝您在这里度过愉快的时光！'
     },
     {
       id: 'tiger-jump',
       name: '虎跳峡',
       position: { x: 28, y: 20 },
       price: '45元',
+      rating: 4.6,
+      location: '丽江市玉龙县',
+      openTime: '08:00-18:00',
       description: '世界上最深的峡谷之一，金沙江劈开玉龙、哈巴两座雪山，气势磅礴。',
-      tips: ['徒步路线惊险', '注意安全', '带好装备'],
+      highlights: [
+        '世界上最深的峡谷之一',
+        '金沙江奔腾而过，气势磅礴',
+        '徒步路线惊险刺激',
+        '可以看到玉龙、哈巴雪山'
+      ],
+      tips: ['徒步路线惊险', '注意安全', '带好装备', '建议雇佣向导'],
       images: ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800'],
       category: '自然风光',
-      relatedVideos: []
+      audioGuide: '欢迎来到虎跳峡。这里是世界上最深的峡谷之一，金沙江劈开玉龙、哈巴两座雪山，奔腾而下，气势磅礴。虎跳峡分为上、中、下三段，各有特色。这里的徒步路线惊险刺激，吸引着众多户外爱好者。如果您计划徒步，请务必注意安全，带好装备，最好雇佣向导。站在峡谷边缘，您能感受到大自然的震撼力量。祝您游览愉快！'
     },
     {
       id: 'blue-moon',
       name: '蓝月谷',
       position: { x: 42, y: 35 },
       price: '包含在雪山票里',
+      rating: 4.7,
+      location: '丽江市玉龙县',
+      openTime: '07:00-16:00',
       description: '位于玉龙雪山脚下，湖水湛蓝如宝石，被誉为"小九寨沟"。',
-      tips: ['晴天最美', '拍照圣地', '与雪山一起游玩'],
+      highlights: [
+        '位于玉龙雪山脚下',
+        '湖水湛蓝清澈，宛如宝石',
+        '被誉为"小九寨沟"',
+        '晴天时景色最美'
+      ],
+      tips: ['晴天最美', '拍照圣地', '与雪山一起游玩', '建议上午前往'],
       images: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'],
       category: '自然风光',
-      relatedVideos: []
+      audioGuide: '欢迎来到蓝月谷。这里位于玉龙雪山脚下，湖水湛蓝清澈，宛如一颗巨大的蓝宝石镶嵌在山谷之中，被誉为"小九寨沟"。蓝月谷的水源自玉龙雪山的冰雪融水，富含矿物质，因此呈现出独特的蓝绿色。晴天时景色最美，建议上午前往，光线最适合拍照。这里与玉龙雪山的门票是一起的，建议您安排同一天游览。祝您拍出美丽的照片！'
     }
   ];
 
@@ -185,7 +262,7 @@ export function TravelMap({ onClose, selectedCity = '丽江', userLocation }: Tr
                   if (timeSlot === 'morning') return '☀️ 早上好！适合游览古城和公园';
                   if (timeSlot === 'forenoon') return '🌤️ 上午好！适合爬山看雪山';
                   if (timeSlot === 'lunch') return '🍜 午餐时间！去尝尝地道美食';
-                  if (timeSlot === 'afternoon') return '☁️ 下午好！适合漫步古镇';
+                  if (timeSlot === 'afternoon') return '☁️ 下午好！适合漫���古镇';
                   if (timeSlot === 'evening') return '🌆 傍晚时分！夜景即将上演';
                   return '🌙 晚上好！古城夜生活开始了';
                 })()}
@@ -435,202 +512,13 @@ export function TravelMap({ onClose, selectedCity = '丽江', userLocation }: Tr
 
       {/* 景点详情侧边栏 */}
       {selectedAttraction && (
-        <div className="fixed right-0 top-0 bottom-0 w-full md:w-[480px] bg-white shadow-2xl z-50 overflow-y-auto animate-slideInRight">
-          <div className="sticky top-0 bg-gradient-to-r from-sky-400 to-green-400 p-6 text-white z-10">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h3 className="text-2xl mb-2">{selectedAttraction.name}</h3>
-                <div className="flex items-center gap-3 text-sm text-white/90">
-                  <span className="flex items-center gap-1">
-                    <DollarSign className="w-4 h-4" />
-                    {selectedAttraction.price}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {selectedAttraction.category}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedAttraction(null)}
-                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors flex-shrink-0"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200 bg-white sticky top-[120px] z-10">
-            <button
-              onClick={() => setActiveTab('info')}
-              className={`flex-1 py-3 text-sm transition-colors ${
-                activeTab === 'info'
-                  ? 'text-sky-600 border-b-2 border-sky-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              📍 景点介绍
-            </button>
-            <button
-              onClick={() => setActiveTab('tips')}
-              className={`flex-1 py-3 text-sm transition-colors ${
-                activeTab === 'tips'
-                  ? 'text-sky-600 border-b-2 border-sky-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              💡 游玩攻略
-            </button>
-            <button
-              onClick={() => setActiveTab('videos')}
-              className={`flex-1 py-3 text-sm transition-colors ${
-                activeTab === 'videos'
-                  ? 'text-sky-600 border-b-2 border-sky-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              🎬 精彩推荐
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-6">
-            {activeTab === 'info' && (
-              <div className="space-y-6">
-                {/* 景点图片 */}
-                <div className="rounded-2xl overflow-hidden">
-                  <img 
-                    src={selectedAttraction.images[0]} 
-                    alt={selectedAttraction.name}
-                    className="w-full h-64 object-cover"
-                  />
-                </div>
-
-                {/* 描述 */}
-                <div className="bg-gradient-to-br from-sky-50 to-green-50 rounded-2xl p-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    {selectedAttraction.description}
-                  </p>
-                </div>
-
-                {/* 详细地图按钮 */}
-                {selectedAttraction.hasDetailMap && (
-                  <button
-                    onClick={handleShowDetailMap}
-                    className="w-full py-4 bg-gradient-to-r from-sky-400 to-green-400 text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                  >
-                    <MapPin className="w-5 h-5" />
-                    <span>查看古城详细游玩地图</span>
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'tips' && (
-              <div className="space-y-4">
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4">
-                  <h4 className="text-gray-800 mb-3 flex items-center gap-2">
-                    <span>💡</span>
-                    <span>游玩建议</span>
-                  </h4>
-                  <ul className="space-y-2">
-                    {selectedAttraction.tips.map((tip, index) => (
-                      <li key={index} className="flex items-start gap-2 text-gray-700">
-                        <span className="text-orange-500 mt-1">•</span>
-                        <span>{tip}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4">
-                  <h4 className="text-gray-800 mb-3 flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-blue-600" />
-                    <span>最佳游览时间</span>
-                  </h4>
-                  <p className="text-gray-700">
-                    建议游玩时间：3-4小时<br/>
-                    最佳季节：四季皆宜
-                  </p>
-                </div>
-
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4">
-                  <h4 className="text-gray-800 mb-3 flex items-center gap-2">
-                    <Navigation className="w-5 h-5 text-green-600" />
-                    <span>交通方式</span>
-                  </h4>
-                  <p className="text-gray-700">
-                    可从丽江古城包车前往，或预约旅行管家提供接送服务
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'videos' && (
-              <div className="space-y-4">
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Video className="w-5 h-5 text-purple-600" />
-                    <h4 className="text-gray-800">相关视频推荐</h4>
-                  </div>
-                  
-                  {/* 视频列表 */}
-                  <div className="space-y-3">
-                    {[
-                      { title: `${selectedAttraction.name}游玩攻略`, views: '12.5万', duration: '05:23' },
-                      { title: `带你逛遍${selectedAttraction.name}`, views: '8.3万', duration: '08:15' },
-                      { title: `${selectedAttraction.name}美食推荐`, views: '6.7万', duration: '04:50' }
-                    ].map((video, index) => (
-                      <div key={index} className="bg-white rounded-xl p-3 hover:shadow-md transition-shadow cursor-pointer">
-                        <div className="flex gap-3">
-                          <div className="w-24 h-16 bg-gradient-to-br from-purple-200 to-pink-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <Camera className="w-8 h-8 text-purple-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-800 mb-1 truncate">{video.title}</p>
-                            <div className="flex items-center gap-3 text-xs text-gray-500">
-                              <span>▶ {video.views}</span>
-                              <span>⏱ {video.duration}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-2xl p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Camera className="w-5 h-5 text-sky-600" />
-                    <h4 className="text-gray-800">摄影攻略</h4>
-                  </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    最佳拍照时间：清晨和傍晚的柔和光线<br/>
-                    推荐机位：主入口全景、特色建筑细节<br/>
-                    拍照技巧：利用自然光线，避开人流高峰
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <AttractionDetailPanel
+          attraction={selectedAttraction}
+          onClose={() => setSelectedAttraction(null)}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
       )}
-
-      <style jsx>{`
-        @keyframes slideInRight {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-        .animate-slideInRight {
-          animation: slideInRight 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

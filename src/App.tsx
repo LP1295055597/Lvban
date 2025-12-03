@@ -6,16 +6,23 @@ import { GuideOrderManagement } from './components/GuideOrderManagement';
 import { Messages } from './components/Messages';
 import { Profile } from './components/Profile';
 import { LocationRequest, LocationData } from './components/LocationRequest';
+import { LoginPage } from './components/LoginPage';
 import { Home as HomeIcon, Users, Briefcase, MessageCircle, User } from 'lucide-react';
 import { Toaster } from 'sonner@2.0.3';
 
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'mates' | 'guide' | 'messages' | 'profile'>('home');
   const [userRole, setUserRole] = useState<'tourist' | 'guide'>('tourist');
   const [location, setLocation] = useState<LocationData | null>(null);
-  const [showLocationRequest, setShowLocationRequest] = useState(true);
+  const [showLocationRequest, setShowLocationRequest] = useState(false);
   const [touristVerified, setTouristVerified] = useState(false);
   const [hasNewOrders, setHasNewOrders] = useState(true); // 新订单提示
+
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    setShowLocationRequest(true);
+  };
 
   const handleLocationGranted = (locationData: LocationData) => {
     setLocation(locationData);
@@ -27,6 +34,17 @@ export default function App() {
     setShowLocationRequest(false);
   };
 
+  // 显示登录页面
+  if (!isLoggedIn) {
+    return (
+      <>
+        <LoginPage onLoginSuccess={handleLoginSuccess} />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
+  // 显示位置请求
   if (showLocationRequest) {
     return (
       <LocationRequest

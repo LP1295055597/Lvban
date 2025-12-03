@@ -3,6 +3,7 @@ import { MapPin, Star, Award, Search, MessageCircle, Shield, Navigation, Heart, 
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { GuideDetail } from './GuideDetail';
 import { ChatDialog } from './ChatDialog';
+import { calculateLevel, calculatePoints, GUIDE_LEVELS, type GuideLevel } from '../utils/guideLevelSystem';
 
 interface GuideOrdersProps {
   userLocation: { latitude: number; longitude: number; city?: string } | null;
@@ -29,6 +30,12 @@ interface Guide {
   vehiclePrice?: number; // 车辆价格（按天计价）
   vehicleMileageLimit?: number; // 车辆每日里程限制（公里）
   grabbedTime?: string; // 抢单时间
+  // 等级系统字段
+  points?: number;
+  level?: GuideLevel;
+  isVerified?: boolean;
+  hasPhotography?: boolean;
+  goodReviewCount?: number;
 }
 
 interface Review {
@@ -40,6 +47,31 @@ interface Review {
   content: string;
   images?: string[];
 }
+
+// 生成示例评论
+const generateReviews = (count: number): Review[] => {
+  const reviewTemplates = [
+    { userName: '张小姐', content: '非常专业的旅行管家，安排的行程很合理，拍照技术一流！强烈推荐！', rating: 5 },
+    { userName: '李先生', content: '服务态度好，对丽江很熟悉，带我们去了很多本地人才知道的地方。', rating: 5 },
+    { userName: '王女士', content: '很有耐心，讲解详细，孩子们都很喜欢。下次还会选择TA。', rating: 5 },
+    { userName: '刘先生', content: '性价比高，时间安排灵活，是一次愉快的旅行体验。', rating: 4 },
+    { userName: '陈小姐', content: '热情周到，推荐的美食都很不错，拍照也很用心。', rating: 5 },
+    { userName: '赵先生', content: '专业靠谱，对历史文化了解深入，学到了很多知识。', rating: 5 },
+  ];
+  
+  return reviewTemplates.slice(0, count).map((template, index) => ({
+    id: index + 1,
+    userName: template.userName,
+    userAvatar: `https://images.unsplash.com/photo-${1500000000000 + index * 1000000}?w=100`,
+    rating: template.rating,
+    date: `2024-${11 - Math.floor(index / 2)}-${15 + index}`,
+    content: template.content,
+    images: index % 3 === 0 ? [
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+      'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=400'
+    ] : undefined
+  }));
+};
 
 const mockGuides: Guide[] = [
   {
@@ -56,8 +88,14 @@ const mockGuides: Guide[] = [
     location: '丽江古城',
     languages: ['普通话', '纳西语', '英语'],
     isCertified: true,
-    reviews: [],
-    hasVehicle: false
+    reviews: generateReviews(6),
+    hasVehicle: false,
+    // 等级系统数据
+    goodReviewCount: 140,
+    hasPhotography: true,
+    isVerified: true,
+    points: calculatePoints(156, 140, true, false),
+    level: calculateLevel(calculatePoints(156, 140, true, false))
   },
   {
     id: 2,
@@ -72,11 +110,17 @@ const mockGuides: Guide[] = [
     servicePrice: '150',
     location: '丽江市区',
     languages: ['普通话', '纳西语'],
-    reviews: [],
+    reviews: generateReviews(6),
     hasVehicle: true,
     vehicleType: '别克GL8',
-    vehiclePrice: 300, // 按天计价
-    vehicleMileageLimit: 100 // 每日限制100公里
+    vehiclePrice: 300,
+    vehicleMileageLimit: 100,
+    // 等级系统数据
+    goodReviewCount: 180,
+    hasPhotography: true,
+    isVerified: true,
+    points: calculatePoints(203, 180, true, true),
+    level: calculateLevel(calculatePoints(203, 180, true, true))
   },
   {
     id: 3,
@@ -91,8 +135,14 @@ const mockGuides: Guide[] = [
     servicePrice: '80',
     location: '丽江古城',
     languages: ['普通话', '英语'],
-    reviews: [],
-    hasVehicle: false
+    reviews: generateReviews(5),
+    hasVehicle: false,
+    // 等级系统数据
+    goodReviewCount: 75,
+    hasPhotography: true,
+    isVerified: false,
+    points: calculatePoints(89, 75, true, false),
+    level: calculateLevel(calculatePoints(89, 75, true, false))
   },
   {
     id: 4,
@@ -108,11 +158,17 @@ const mockGuides: Guide[] = [
     location: '丽江古城',
     languages: ['普通话', '纳西语', '英语'],
     isCertified: true,
-    reviews: [],
+    reviews: generateReviews(6),
     hasVehicle: true,
     vehicleType: '丰田汉兰达',
-    vehiclePrice: 250, // 按天计价
-    vehicleMileageLimit: 100 // 每日限制100公里
+    vehiclePrice: 250,
+    vehicleMileageLimit: 100,
+    // 等级系统数据
+    goodReviewCount: 280,
+    hasPhotography: false,
+    isVerified: true,
+    points: calculatePoints(312, 280, false, true),
+    level: calculateLevel(calculatePoints(312, 280, false, true))
   }
 ];
 
@@ -126,6 +182,7 @@ export function GuideOrders({ userLocation, touristVerified }: GuideOrdersProps)
   const [filterGender, setFilterGender] = useState<string>('全部');
   const [filterPriceRange, setFilterPriceRange] = useState<string>('全部');
   const [filterVehicle, setFilterVehicle] = useState<string>('全部');
+  const [filterLevel, setFilterLevel] = useState<string>('全部');
   const [showFilters, setShowFilters] = useState(false); // 默认隐藏
   const [showSkillsExpanded, setShowSkillsExpanded] = useState(false); // 专业技能默认收起
   const [localTouristVerified, setLocalTouristVerified] = useState(touristVerified);
@@ -164,11 +221,14 @@ export function GuideOrders({ userLocation, touristVerified }: GuideOrdersProps)
     const priceMatch = !selectedPriceRange || filterPriceRange === '全部' || 
       (price >= selectedPriceRange.min && price < selectedPriceRange.max);
     
+    // 等级筛选
+    const levelMatch = filterLevel === '全部' || (guide.level && GUIDE_LEVELS[guide.level].name === filterLevel);
+    
     // 车辆筛选
     const vehicleMatch = filterVehicle === '全部' || 
       (filterVehicle === '有车' ? guide.hasVehicle : !guide.hasVehicle);
     
-    return skillMatch && certifiedMatch && genderMatch && priceMatch && vehicleMatch;
+    return skillMatch && certifiedMatch && genderMatch && priceMatch && levelMatch && vehicleMatch;
   });
 
   // 浏览旅行管家模式：根据用户距离推荐（默认不受筛选器影响）
@@ -195,10 +255,12 @@ export function GuideOrders({ userLocation, touristVerified }: GuideOrdersProps)
       const priceMatch = !selectedPriceRange || filterPriceRange === '全部' || 
         (price >= selectedPriceRange.min && price < selectedPriceRange.max);
       
+      const levelMatch = filterLevel === '全部' || (guide.level && GUIDE_LEVELS[guide.level].name === filterLevel);
+      
       const vehicleMatch = filterVehicle === '全部' || 
         (filterVehicle === '有车' ? guide.hasVehicle : !guide.hasVehicle);
       
-      return searchMatch && skillMatch && certifiedMatch && genderMatch && priceMatch && vehicleMatch;
+      return searchMatch && skillMatch && certifiedMatch && genderMatch && priceMatch && levelMatch && vehicleMatch;
     }
     
     return searchMatch;
@@ -928,6 +990,37 @@ export function GuideOrders({ userLocation, touristVerified }: GuideOrdersProps)
                 </div>
               </div>
 
+              {/* Level Filter */}
+              <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-4 shadow-lg border border-white/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <Award className="w-4 h-4 text-purple-600" />
+                  <h4 className="text-sm text-gray-700">管家等级</h4>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {['全部', '初级', '中级', '高级', '金牌'].map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setFilterLevel(level)}
+                      className={`px-3 py-2 rounded-xl text-xs transition-all ${
+                        filterLevel === level
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
+                          : 'bg-gray-100/80 text-gray-700 hover:bg-gray-200/80'
+                      }`}
+                    >
+                      {level === '全部' ? level : (
+                        <span className="flex items-center justify-center gap-1">
+                          {level === '初级' && '🌱'}
+                          {level === '中级' && '⭐'}
+                          {level === '高级' && '💎'}
+                          {level === '金牌' && '👑'}
+                          <span>{level}</span>
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Skills Filter - 可折叠 */}
               <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-4 shadow-lg border border-white/20">
                 <button
@@ -1023,7 +1116,23 @@ export function GuideOrders({ userLocation, touristVerified }: GuideOrdersProps)
                         {/* Info */}
                         <div className="space-y-3">
                           <div>
-                            <h2 className="text-white mb-1">{featuredGuide.name}</h2>
+                            <div className="flex items-center gap-2 mb-2">
+                              <h2 className="text-white">{featuredGuide.name}</h2>
+                              {/* Level Badge */}
+                              {featuredGuide.level && (
+                                <div className="bg-white/20 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
+                                  <span>{GUIDE_LEVELS[featuredGuide.level].icon}</span>
+                                  <span>{GUIDE_LEVELS[featuredGuide.level].name}</span>
+                                </div>
+                              )}
+                              {/* Verified Badge */}
+                              {featuredGuide.isVerified && (
+                                <div className="bg-green-400/30 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
+                                  <Shield className="w-3 h-3" />
+                                  <span>认证</span>
+                                </div>
+                              )}
+                            </div>
                             <p className="text-white/80 text-sm">{featuredGuide.age}岁 · {featuredGuide.gender} · {featuredGuide.location}</p>
                           </div>
 
@@ -1093,8 +1202,23 @@ export function GuideOrders({ userLocation, touristVerified }: GuideOrdersProps)
                           {/* Info */}
                           <div className="flex-1 min-w-0 text-left">
                             <div className="flex items-start justify-between mb-1">
-                              <div>
-                                <h4 className="text-gray-800">{guide.name}</h4>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <h4 className="text-gray-800">{guide.name}</h4>
+                                  {/* Level Badge */}
+                                  {guide.level && (
+                                    <div className={`${GUIDE_LEVELS[guide.level].bgColor} ${GUIDE_LEVELS[guide.level].color} px-2 py-0.5 rounded-full text-xs flex items-center gap-1`}>
+                                      <span className="text-[10px]">{GUIDE_LEVELS[guide.level].icon}</span>
+                                      <span>{GUIDE_LEVELS[guide.level].name}</span>
+                                    </div>
+                                  )}
+                                  {/* Verified Badge */}
+                                  {guide.isVerified && (
+                                    <div className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-xs flex items-center gap-0.5">
+                                      <Shield className="w-2.5 h-2.5" />
+                                    </div>
+                                  )}
+                                </div>
                                 <p className="text-xs text-gray-500">{guide.age}岁 · {guide.gender}</p>
                               </div>
                               <div className="text-right">

@@ -42,7 +42,7 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
   });
   const [introduction, setIntroduction] = useState('');
   const [hourlyRate, setHourlyRate] = useState(100);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [personalInfo, setPersonalInfo] = useState({
     realName: '',
     phone: '',
@@ -145,8 +145,8 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
       alert('请完善个人信息');
       return;
     }
-    if (!agreedToTerms) {
-      alert('请同意服务条款');
+    if (!hasScrolledToBottom) {
+      alert('请滚动至协议底部并同意服务条款');
       return;
     }
 
@@ -380,7 +380,7 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
                   </div>
                   <div>
                     <label className="text-gray-700 text-sm mb-2 block">
-                      联系人���话 <span className="text-red-500">*</span>
+                      联系人话 <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
@@ -859,24 +859,134 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
           <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-gray-200">
             {/* Terms and Conditions - Only show on Step 5 */}
             {currentStep === 5 && (
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200">
+                <h4 className="text-gray-800 mb-2 flex items-center gap-2">
+                  📜 旅行管家服务协议
+                  <span className="text-red-500">*</span>
+                </h4>
+                <p className="text-xs text-gray-600 mb-3">请仔细阅读协议内容，滚动到底部后才可勾选同意</p>
+                
+                {/* Scrollable Agreement Content */}
+                <div 
+                  className="bg-white rounded-lg p-4 h-64 overflow-y-auto border border-gray-300 mb-3 text-xs text-gray-700 leading-relaxed"
+                  onScroll={(e) => {
+                    const element = e.currentTarget;
+                    const hasReachedBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 5;
+                    if (hasReachedBottom && !hasScrolledToBottom) {
+                      setHasScrolledToBottom(true);
+                    }
+                  }}
+                >
+                  <h5 className="font-bold text-sm text-gray-800 mb-2">旅行管家服务协议</h5>
+                  
+                  <p className="mb-3">
+                    <strong>一、服务内容</strong><br/>
+                    1.1 旅行管家服务是指由本平台认证的本地向导为游客提供陪同游览、行程规划、景点讲解、美食推荐、交通协助等综合旅行服务。<br/>
+                    1.2 旅行管家应根据游客需求，提供专业、热情、周到的服务，确保游客旅行体验良好。<br/>
+                    1.3 旅行管家可根据自身情况提供车辆、摄影、翻译等增值服务，但需在平台上明确标注。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>二、服务标准</strong><br/>
+                    2.1 旅行管家应按约定时间准时到达集合地点，如有特殊情况应提前30分钟通知游客。<br/>
+                    2.2 旅行管家应保持良好的个人形象和职业素养，不得有任何骚扰、欺诈、强迫消费等不当行为。<br/>
+                    2.3 旅行管家应尊重游客的个人意愿和隐私，不得擅自更改行程或带游客前往未经同意的地点。<br/>
+                    2.4 旅行管家应熟悉服务区域的景点、餐饮、交通等信息，为游客提供准确的建议和帮助。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>三、费用与结算</strong><br/>
+                    3.1 旅行管家的服务费用按小时计算，具体价格由旅行管家自主设定，平台收取20%的服务费。<br/>
+                    3.2 游客支付的费用将由平台托管，服务完成后7天自动结算至旅行管家账户。<br/>
+                    3.3 如遇投诉或纠纷，平台有权延迟结算，待问题解决后再进行结算。<br/>
+                    3.4 旅行管家提供车辆服务的，车辆费用按天计算，无论服务时长多少，均按一天收费。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>四、取消与退款</strong><br/>
+                    4.1 游客在集合前2小时以上取消订单，旅行管家不收取任何费用。<br/>
+                    4.2 游客在集合前2小时内取消订单，旅行管家可获得订单金额的20%作为补偿。<br/>
+                    4.3 旅行管家因个人原因取消订单，需提前24小时通知游客，否则将被扣除信用分。<br/>
+                    4.4 因不可抗力因素（如极端天气、自然灾害等）导致订单取消的，双方均不承担责任。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>五、责任与义务</strong><br/>
+                    5.1 旅行管家应确保所提供的个人信息、资质证明、服务介绍等内容真实有效，不得弄虚作假。<br/>
+                    5.2 旅行管家在服务过程中应注意游客的人身和财产安全，但对游客自身行为导致的意外不承担责任。<br/>
+                    5.3 旅行管家不得私下收取游客费用，所有交易必须通过平台完成，否则平台不承担任何责任。<br/>
+                    5.4 旅行管家应遵守国家法律法规和平台规则，不得从事任何违法违规活动。<br/>
+                    5.5 旅行管家有权拒绝提供服务给有不当行为、不尊重服务人员的游客。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>六、评价与信用</strong><br/>
+                    6.1 每次服务完成后，游客可对旅行管家进行评价，评价将影响旅行管家的信用分和排名。<br/>
+                    6.2 旅行管家连续收到3次差评或投诉，平台有权暂停其服务资格，进行审查。<br/>
+                    6.3 旅行管家保持良好的服务质量和高评分，可获得平台推荐和流量倾斜。<br/>
+                    6.4 旅行管家不得通过虚假交易、刷单等方式提高评分，一经发现将永久封禁账号。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>七、知识产权</strong><br/>
+                    7.1 旅行管家在平台上传的照片、视频、文字等内容，应确保拥有合法的知识产权或使用权。<br/>
+                    7.2 平台有权将旅行管家上传的内容用于平台宣传和推广，但不会用于商业盈利。<br/>
+                    7.3 旅行管家不得侵犯他人的知识产权，否则由此产生的法律责任由旅行管家自行承担。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>八、隐私保护</strong><br/>
+                    8.1 平台将严格保护旅行管家的个人信息，不会泄露给任何第三方。<br/>
+                    8.2 旅行管家的身份证、驾照等敏感信息仅用于实名认证，存储在加密数据库中。<br/>
+                    8.3 旅行管家应尊重游客的隐私，不得擅自拍摄、传播游客的照片或个人信息。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>九、协议变更</strong><br/>
+                    9.1 平台有权根据业务发展需要修改本协议，修改后的协议将在平台上公布。<br/>
+                    9.2 协议修改后，旅行管家继续使用平台服务即视为接受新的协议内容。<br/>
+                    9.3 如旅行管家不同意修改后的协议，可以选择停止使用平台服务。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>十、争议解决</strong><br/>
+                    10.1 本协议的签订、履行、解释均适用中华人民共和国法律。<br/>
+                    10.2 因本协议产生的任何争议，双方应友好协商解决；协商不成的，可向平台所在地人民法院提起诉讼。
+                  </p>
+                  
+                  <p className="mb-3">
+                    <strong>十一、其他</strong><br/>
+                    11.1 本协议自旅行管家勾选同意并提交入驻申请之日起生效。<br/>
+                    11.2 本协议未尽事宜，按照国家相关法律法规和平台规则执行。<br/>
+                    11.3 本协议的最终解释权归平台所有。
+                  </p>
+                  
+                  <div className="text-center mt-6 py-4 border-t border-gray-300">
+                    <p className="text-gray-600">— 协议结束 —</p>
+                    <p className="text-xs text-gray-500 mt-2">感谢您的耐心阅读</p>
+                  </div>
+                </div>
+                
+                {/* Checkbox */}
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
                     id="guide-terms-checkbox"
-                    checked={agreedToTerms}
-                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    className="w-4 h-4 mt-0.5 text-blue-500 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 flex-shrink-0"
+                    checked={hasScrolledToBottom}
+                    onChange={(e) => setHasScrolledToBottom(e.target.checked)}
+                    disabled={!hasScrolledToBottom}
+                    className="w-4 h-4 mt-0.5 text-blue-500 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
-                  <label htmlFor="guide-terms-checkbox" className="text-sm text-gray-700 cursor-pointer">
-                    我已阅读并同意{' '}
-                    <a 
-                      href="#" 
-                      onClick={(e) => { e.preventDefault(); alert('《旅行管家服务协议》详情'); }}
-                      className="text-blue-500 underline hover:text-blue-600"
-                    >
-                      《旅行管家服务协议》
-                    </a>
+                  <label 
+                    htmlFor="guide-terms-checkbox" 
+                    className={`text-sm cursor-pointer ${hasScrolledToBottom ? 'text-gray-700' : 'text-gray-400'}`}
+                  >
+                    我已完整阅读并同意《旅行管家服务协议》
+                    {!hasScrolledToBottom && (
+                      <span className="block text-xs text-orange-600 mt-1">
+                        ⚠️ 请滚动至协议底部后勾选
+                      </span>
+                    )}
                   </label>
                 </div>
               </div>
@@ -902,7 +1012,7 @@ export function GuideRegistration({ onClose, onSuccess }: GuideRegistrationProps
               ) : (
                 <button
                   onClick={handleSubmit}
-                  disabled={!agreedToTerms}
+                  disabled={!hasScrolledToBottom}
                   className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   提交审核

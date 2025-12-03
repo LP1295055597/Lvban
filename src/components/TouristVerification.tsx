@@ -12,7 +12,6 @@ export function TouristVerification({ onSuccess, onClose }: TouristVerificationP
   const [phoneNumber, setPhoneNumber] = useState('');
   const [emergencyContact, setEmergencyContact] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
@@ -53,7 +52,7 @@ export function TouristVerification({ onSuccess, onClose }: TouristVerificationP
     }, 2000);
   };
 
-  const canSubmit = frontImage && backImage && phoneNumber && emergencyContact && emergencyPhone && agreedToTerms;
+  const canSubmit = frontImage && backImage && phoneNumber && emergencyContact && emergencyPhone;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -273,29 +272,6 @@ export function TouristVerification({ onSuccess, onClose }: TouristVerificationP
                         </p>
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Terms and Conditions */}
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="terms-checkbox"
-                      checked={agreedToTerms}
-                      onChange={(e) => setAgreedToTerms(e.target.checked)}
-                      className="w-4 h-4 mt-0.5 text-blue-500 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 flex-shrink-0"
-                    />
-                    <label htmlFor="terms-checkbox" className="text-sm text-gray-700 cursor-pointer">
-                      我已阅读并同意{' '}
-                      <a 
-                        href="#" 
-                        onClick={(e) => { e.preventDefault(); alert('《平台服务协议》详情'); }}
-                        className="text-blue-500 underline hover:text-blue-600"
-                      >
-                        《平台服务协议》
-                      </a>
-                    </label>
                   </div>
                 </div>
 

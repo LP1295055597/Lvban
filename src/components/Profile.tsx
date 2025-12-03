@@ -1,4 +1,4 @@
-import { Settings, Heart, MapPin, Star, Calendar, Award, ChevronRight, LogOut, RefreshCw, UserPlus, Shield, Wallet, Briefcase, DollarSign, AlertTriangle, TrendingUp, CheckCircle } from 'lucide-react';
+import { Settings, Heart, MapPin, Star, Calendar, Award, ChevronRight, LogOut, RefreshCw, UserPlus, Shield, Wallet, Briefcase, DollarSign, AlertTriangle, TrendingUp, CheckCircle, Info, Sparkles, Clock } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState } from 'react';
 import { GuideRegistration } from './GuideRegistration';
@@ -7,6 +7,18 @@ import { GuideWallet } from './GuideWallet';
 import { PriceSetting } from './PriceSetting';
 import { OrderAlertManagement } from './OrderAlertManagement';
 import { TouristVerification } from './TouristVerification';
+import { GuideProfileEdit, GuideProfileData } from './GuideProfileEdit';
+import { GuideLevelInfo } from './GuideLevelInfo';
+import { 
+  calculateLevel, 
+  calculatePoints, 
+  calculateCommissionRate, 
+  GUIDE_LEVELS, 
+  formatCommissionRate,
+  formatPriceRange,
+  getLevelProgress,
+  getPointsToNextLevel 
+} from '../utils/guideLevelSystem';
 
 interface ProfileProps {
   userRole: 'tourist' | 'guide';
@@ -29,6 +41,34 @@ export function Profile({ userRole, onRoleChange, touristVerified = false, onTou
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false); // 平台管理员身份
   const [showTouristVerification, setShowTouristVerification] = useState(false);
+  const [showGuideProfileEdit, setShowGuideProfileEdit] = useState(false);
+  const [showLevelInfo, setShowLevelInfo] = useState(false);
+  const [guideProfileData, setGuideProfileData] = useState<GuideProfileData>({
+    mediaFiles: [],
+    selectedSkills: ['photography', 'food', 'local'],
+    introduction: '大家好！我是本地人阿秀，从事旅行管家服务已有5年时间，接待过来自全国各地的3000+游客。我熟悉丽江的每一条街道，了解最地道的纳西美食，会说流利的英语。擅长摄影，可以帮您记录旅途中的美好瞬间。我会用心为每一位游客提供贴心、专业的服务，让您的丽江之旅留下美好回忆！'
+  });
+
+  // 地陪等级数据（模拟数据，实际应从后端获取）
+  const guideStats = {
+    orderCount: 156,
+    goodReviewCount: 140,
+    hasPhotography: true,
+    hasVehicle: false,
+    isVerified: certificationStatus === 'approved'
+  };
+  
+  const totalPoints = calculatePoints(
+    guideStats.orderCount,
+    guideStats.goodReviewCount,
+    guideStats.hasPhotography,
+    guideStats.hasVehicle
+  );
+  const guideLevel = calculateLevel(totalPoints);
+  const levelInfo = GUIDE_LEVELS[guideLevel];
+  const commissionRate = calculateCommissionRate(guideLevel, guideStats.isVerified);
+  const levelProgress = getLevelProgress(totalPoints);
+  const pointsToNext = getPointsToNextLevel(totalPoints);
 
   // 如果显示后台管理界面，直接返回
   if (showAdminPanel) {
@@ -104,68 +144,178 @@ export function Profile({ userRole, onRoleChange, touristVerified = false, onTou
       </div>
 
       {/* User Info Card */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
-        <div className="flex items-center gap-4 mb-4">
-          <ImageWithFallback
-            src={isTourist 
-              ? "https://images.unsplash.com/photo-1535208632259-841d129a6af5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwdHJhdmVsfGVufDF8fHx8MTc2NDU5ODc5OXww&ixlib=rb-4.1.0&q=80&w=1080"
-              : "https://images.unsplash.com/photo-1643646805556-350c057663dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwcG9ydHJhaXQlMjBzbWlsZXxlbnwxfHx8fDE3NjQ1NTE0NDR8MA&ixlib=rb-4.1.0&q=80&w=1080"
-            }
-            alt="User Avatar"
-            className="w-20 h-20 rounded-full object-cover border-4 border-white/30"
-          />
-          <div className="flex-1">
-            <h2 className="text-white mb-1">{isTourist ? '旅行者小美' : '旅行管家阿秀'}</h2>
-            <p className="text-white/90 text-sm mb-2">
-              {isTourist ? '资深旅行达人' : '认证旅行管家 · 摄影高手'}
-            </p>
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
-              <span className="text-sm">{isTourist ? '4.8分' : '4.9分'}</span>
+      {isTourist ? (
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+          <div className="flex items-center gap-4 mb-4">
+            <ImageWithFallback
+              src="https://images.unsplash.com/photo-1535208632259-841d129a6af5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwdHJhdmVsfGVufDF8fHx8MTc2NDU5ODc5OXww&ixlib=rb-4.1.0&q=80&w=1080"
+              alt="User Avatar"
+              className="w-20 h-20 rounded-full object-cover border-4 border-white/30"
+            />
+            <div className="flex-1">
+              <h2 className="text-white mb-1">旅行者小美</h2>
+              <p className="text-white/90 text-sm mb-2">资深旅行达人</p>
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
+                <span className="text-sm">4.8分</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowGuideProfileEdit(true)}
+              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/20">
+            <div className="text-center">
+              <div className="text-white mb-1">23</div>
+              <div className="text-white/80 text-xs">旅行次数</div>
+            </div>
+            <div className="text-center">
+              <div className="text-white mb-1">156</div>
+              <div className="text-white/80 text-xs">获赞数</div>
+            </div>
+            <div className="text-center">
+              <div className="text-white mb-1">8</div>
+              <div className="text-white/80 text-xs">找到搭子</div>
             </div>
           </div>
-          <button className="p-2 hover:bg-white/20 rounded-full transition-colors">
-            <Settings className="w-5 h-5" />
-          </button>
         </div>
+      ) : (
+        /* Integrated Guide Profile Card - Guide Mode Only */
+        <div className="relative">
+          <div className={`absolute inset-0 ${
+            guideLevel === 'gold' ? 'bg-gradient-to-r from-amber-500/20 to-yellow-500/20' :
+            guideLevel === 'senior' ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20' :
+            guideLevel === 'intermediate' ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20' :
+            'bg-gradient-to-r from-gray-500/20 to-slate-500/20'
+          } blur-xl rounded-2xl`}></div>
+          <div className="relative bg-white/95 backdrop-blur-xl rounded-2xl p-5 shadow-xl border border-white/20">
+            {/* Header Section */}
+            <div className="flex items-start gap-4 mb-4 pb-4 border-b border-gray-100">
+              <ImageWithFallback
+                src="https://images.unsplash.com/photo-1643646805556-350c057663dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMHdvbWFuJTIwcG9ydHJhaXQlMjBzbWlsZXxlbnwxfHx8fDE3NjQ1NTE0NDR8MA&ixlib=rb-4.1.0&q=80&w=1080"
+                alt="Guide Avatar"
+                className="w-20 h-20 rounded-2xl object-cover shadow-lg ring-4 ring-white/50"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-gray-800">旅行管家阿秀</h2>
+                  <button 
+                    onClick={() => setShowGuideProfileEdit(true)}
+                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`${levelInfo.bgColor} rounded-lg px-2.5 py-1 flex items-center gap-1.5`}>
+                    <span className="text-lg">{levelInfo.icon}</span>
+                    <span className={`text-xs ${levelInfo.color}`}>{levelInfo.name}</span>
+                  </div>
+                  {guideStats.isVerified && (
+                    <span className="bg-green-50 text-green-600 px-2 py-1 rounded-lg text-xs flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      已认证
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <span>4.9分</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Award className="w-4 h-4 text-purple-500" />
+                    <span>{totalPoints}积分</span>
+                  </div>
+                  <button
+                    onClick={() => setShowLevelInfo(true)}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    <Info className="w-4 h-4" />
+                    <span className="text-xs">等级说明</span>
+                  </button>
+                </div>
+              </div>
+            </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/20">
-          {isTourist ? (
-            <>
-              <div className="text-center">
-                <div className="text-white mb-1">23</div>
-                <div className="text-white/80 text-xs">旅行次数</div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-3 border border-blue-100 text-center">
+                <div className={`${levelInfo.color} text-xl mb-1`}>
+                  {formatCommissionRate(commissionRate)}
+                </div>
+                <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>平台抽成</span>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-white mb-1">156</div>
-                <div className="text-white/80 text-xs">获赞数</div>
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 border border-purple-100 text-center">
+                <div className="text-purple-600 text-xl mb-1">{guideStats.orderCount}</div>
+                <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                  <Award className="w-3 h-3" />
+                  <span>完成订单</span>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-white mb-1">8</div>
-                <div className="text-white/80 text-xs">找到搭子</div>
+              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-3 border border-amber-100 text-center">
+                <div className="text-amber-600 text-xl mb-1">{guideStats.goodReviewCount}</div>
+                <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  <span>好评数量</span>
+                </div>
               </div>
-            </>
-          ) : (
-            <>
-              <div className="text-center">
-                <div className="text-white mb-1">156</div>
-                <div className="text-white/80 text-xs">接单次数</div>
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-100 text-center">
+                <div className="text-green-600 text-xl mb-1">98%</div>
+                <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  <span>好评率</span>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-white mb-1">98%</div>
-                <div className="text-white/80 text-xs">好评率</div>
+              <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-3 border border-orange-100 text-center">
+                <div className="text-orange-600 text-xl mb-1">3</div>
+                <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>进行中</span>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-white mb-1">3</div>
-                <div className="text-white/80 text-xs">进行中</div>
+              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-3 border border-indigo-100 text-center">
+                <div className="text-indigo-600 text-xl mb-1">5</div>
+                <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  <span>本月订单</span>
+                </div>
               </div>
-            </>
-          )}
+            </div>
+
+            {/* Level Progress */}
+            <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-3 border border-gray-200">
+              <div className="flex items-center justify-between mb-2 text-xs text-gray-600">
+                <span className="flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  等级进度
+                </span>
+                {pointsToNext !== null && (
+                  <span className="text-gray-500">再获得 {pointsToNext} 积分升级</span>
+                )}
+              </div>
+              <div className="relative h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`absolute inset-y-0 left-0 bg-gradient-to-r ${
+                    guideLevel === 'gold' ? 'from-amber-400 to-amber-500' :
+                    guideLevel === 'senior' ? 'from-purple-400 to-purple-500' :
+                    guideLevel === 'intermediate' ? 'from-blue-400 to-blue-500' :
+                    'from-gray-400 to-gray-500'
+                  } rounded-full transition-all duration-500 shadow-sm`}
+                  style={{ width: `${levelProgress}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-
+      )}
 
       {/* Quick Actions - Only for Guides */}
       {!isTourist && (
@@ -230,7 +380,7 @@ export function Profile({ userRole, onRoleChange, touristVerified = false, onTou
               <div className="mb-3">
                 {certificationStatus === 'none' && (
                   <p className="text-white/90 text-xs leading-relaxed">
-                    认证后可定价¥200<br/>
+                    抽成降低20%<br/>
                     获得优先推荐权
                   </p>
                 )}
@@ -407,9 +557,7 @@ export function Profile({ userRole, onRoleChange, touristVerified = false, onTou
                     <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">¥{currentPrice}/小时</span>
                   </div>
                   <div className="text-gray-500 text-sm">
-                    {certificationStatus === 'approved' 
-                      ? '已认证 · 最高可定价¥200' 
-                      : '未认证 · 最高可定价¥80'}
+                    {levelInfo.icon} {levelInfo.name}管家 · {formatPriceRange(guideLevel)}
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
@@ -560,8 +708,7 @@ export function Profile({ userRole, onRoleChange, touristVerified = false, onTou
           currentVehiclePrice={vehiclePrice}
           currentVehicleBrand={vehicleBrand}
           hasVehicle={hasVehicle}
-          certificationStatus={certificationStatus}
-          pointsLevel={pointsLevel || undefined}
+          guideLevel={guideLevel}
           onSave={(data) => {
             setCurrentPrice(data.price);
             setHasVehicle(data.hasVehicle);
@@ -584,6 +731,23 @@ export function Profile({ userRole, onRoleChange, touristVerified = false, onTou
             alert('恭喜您！身份认证已提交成功。审核通过后，您将可以预约旅行管家服务。');
           }}
           onClose={() => setShowTouristVerification(false)}
+        />
+      )}
+
+      {/* Level Info Modal */}
+      {showLevelInfo && (
+        <GuideLevelInfo onClose={() => setShowLevelInfo(false)} />
+      )}
+
+      {/* Guide Profile Edit */}
+      {showGuideProfileEdit && (
+        <GuideProfileEdit
+          userRole={userRole}
+          initialData={guideProfileData}
+          onSave={(data) => {
+            setGuideProfileData(data);
+          }}
+          onClose={() => setShowGuideProfileEdit(false)}
         />
       )}
     </div>

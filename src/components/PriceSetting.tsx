@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { X, DollarSign, TrendingUp, AlertCircle, Info, CheckCircle2, Shield, Award, Car, Plus, Minus } from 'lucide-react';
+import { X, DollarSign, TrendingUp, AlertCircle, Info, CheckCircle2, Award, Car } from 'lucide-react';
+import { GuideLevel, GUIDE_LEVELS, getPriceRange, formatPriceRange } from '../utils/guideLevelSystem';
 
 interface PriceSettingProps {
   onClose: () => void;
@@ -15,13 +16,7 @@ interface PriceSettingProps {
   currentVehiclePrice?: number;
   currentVehicleBrand?: string;
   hasVehicle?: boolean;
-  certificationStatus: 'none' | 'pending' | 'approved' | 'rejected';
-  pointsLevel?: {
-    level: number;
-    name: string;
-    priceLimit: number;
-    icon: string;
-  };
+  guideLevel: GuideLevel;
 }
 
 export function PriceSetting({ 
@@ -31,8 +26,7 @@ export function PriceSetting({
   currentVehiclePrice = 200,
   currentVehicleBrand = '',
   hasVehicle: initialHasVehicle = false,
-  certificationStatus,
-  pointsLevel
+  guideLevel
 }: PriceSettingProps) {
   const [price, setPrice] = useState(currentPrice.toString());
   const [hasVehicle, setHasVehicle] = useState(initialHasVehicle);
@@ -40,27 +34,24 @@ export function PriceSetting({
   const [vehicleBrand, setVehicleBrand] = useState(currentVehicleBrand);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // 计算价格限制
-  const getMinPrice = () => 30;
-  const getMaxPrice = () => {
-    // 未认证：最高80元
-    if (certificationStatus !== 'approved') {
-      return 80;
-    }
-    // 已认证：根据积分等级
-    return pointsLevel?.priceLimit || 200;
+  // 获取当前等级的价格范围
+  const priceRange = getPriceRange(guideLevel);
+  const minPrice = priceRange.min;
+  const maxPrice = priceRange.max;
+  const levelInfo = GUIDE_LEVELS[guideLevel];
+
+  // 根据等级推荐价格
+  const getRecommendedPrices = () => {
+    const range = priceRange.max - priceRange.min;
+    return [
+      { label: '入门价', value: priceRange.min, desc: '起步价格' },
+      { label: '标准价', value: Math.round(priceRange.min + range * 0.3), desc: '最受欢迎' },
+      { label: '优质价', value: Math.round(priceRange.min + range * 0.6), desc: '高品质服务' },
+      { label: '高端价', value: priceRange.max, desc: '顶级服务' },
+    ];
   };
 
-  const minPrice = getMinPrice();
-  const maxPrice = getMaxPrice();
-
-  // 推荐价格
-  const recommendedPrices = [
-    { label: '入门价', value: 50, desc: '适合新手旅行管家' },
-    { label: '标准价', value: 80, desc: '最受欢迎' },
-    { label: '优质价', value: 120, desc: '高品质服务', needsCert: true },
-    { label: '高端价', value: 180, desc: '资深旅行管家', needsCert: true },
-  ];
+  const recommendedPrices = getRecommendedPrices();
 
   const handleSave = () => {
     const priceNum = parseFloat(price);
@@ -77,11 +68,10 @@ export function PriceSetting({
     }
 
     if (priceNum > maxPrice) {
-      alert(`当前等级价格上限为¥${maxPrice}/小时\n${
-        certificationStatus !== 'approved' 
-          ? '申请平台认证可提升至¥200/小时'
-          : '提升积分等级可获得更高定价权限'
-      }`);
+      const nextLevelText = guideLevel === 'gold' 
+        ? '' 
+        : '\n提升积分等级可获得更高定价权限';
+      alert(`当前${levelInfo.name}旅行管家价格上限为¥${maxPrice}/小时${nextLevelText}`);
       return;
     }
 
@@ -146,16 +136,9 @@ export function PriceSetting({
               <div>
                 <h4 className="text-gray-800 mb-1">当前定价权限</h4>
                 <p className="text-gray-600 text-sm">
-                  {certificationStatus === 'approved' ? '已认证旅行管家' : '未认证旅行管家'}
-                  {pointsLevel && ` · ${pointsLevel.name}`}
+                  {levelInfo.icon} {levelInfo.name}旅行管家 · {formatPriceRange(guideLevel)}
                 </p>
               </div>
-              {certificationStatus === 'approved' && (
-                <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1.5 rounded-full text-sm">
-                  <Shield className="w-4 h-4" />
-                  已认证
-                </div>
-              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -175,23 +158,12 @@ export function PriceSetting({
               </div>
             </div>
 
-            {certificationStatus !== 'approved' && (
-              <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <div className="flex gap-2">
-                  <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-amber-700 text-xs">
-                    申请平台认证可将价格上限提升至¥200/小时，并获得更多曝光机会
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {pointsLevel && pointsLevel.level < 6 && (
+            {guideLevel !== 'gold' && (
               <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-3">
                 <div className="flex gap-2">
                   <Award className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                   <p className="text-blue-700 text-xs">
-                    提升积分等级可获得更高的定价权限，传奇旅行管家最高可定价¥300/小时
+                    提升积分等级可获得更高的定价权限，金牌旅行管家最高可定价¥300/小时
                   </p>
                 </div>
               </div>
@@ -203,33 +175,22 @@ export function PriceSetting({
             <h4 className="text-gray-800 mb-3">推荐价格</h4>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {recommendedPrices.map((item) => {
-                const isDisabled = item.needsCert && certificationStatus !== 'approved';
                 const isSelected = price === item.value.toString();
                 
                 return (
                   <button
                     key={item.value}
-                    onClick={() => !isDisabled && handleQuickSelect(item.value)}
-                    disabled={isDisabled}
+                    onClick={() => handleQuickSelect(item.value)}
                     className={`relative p-4 rounded-xl border-2 transition-all ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50'
-                        : isDisabled
-                        ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
                         : 'border-gray-200 hover:border-blue-300 bg-white'
                     }`}
                   >
-                    {isDisabled && (
-                      <div className="absolute top-2 right-2">
-                        <div className="w-5 h-5 bg-gray-400 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs">🔒</span>
-                        </div>
-                      </div>
-                    )}
                     <div className="text-center">
                       <div className="text-gray-500 text-xs mb-1">{item.label}</div>
                       <div className={`text-xl mb-1 ${
-                        isSelected ? 'text-blue-600' : isDisabled ? 'text-gray-400' : 'text-gray-800'
+                        isSelected ? 'text-blue-600' : 'text-gray-800'
                       }`}>
                         ¥{item.value}
                       </div>
@@ -297,8 +258,8 @@ export function PriceSetting({
                 <h4 className="text-green-800 text-sm mb-2">市场参考</h4>
                 <div className="text-green-700 text-xs space-y-1">
                   <p>• 丽江旅行管家平均价格：¥80-120/小时</p>
-                  <p>• 新手旅行管家建议：¥50-80/小时</p>
-                  <p>• 资深旅行管家参考：¥120-200/小时</p>
+                  <p>• 初级旅行管家建议：¥30-60/小时</p>
+                  <p>• 中高级旅行管家参考：¥100-200/小时</p>
                   <p>• 定价适中更容易获得订单</p>
                 </div>
               </div>
@@ -331,19 +292,19 @@ export function PriceSetting({
               <div className="flex items-start gap-2">
                 <span className="text-blue-600 mt-1">💡</span>
                 <p className="text-gray-700">
-                  <span className="font-medium">新手旅行管家：</span>建议从¥50-60开始，积累好评后逐步提价
+                  <span className="font-medium">初级旅行管家：</span>建议从¥30-50开始，积累好评后逐步提价
                 </p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-blue-600 mt-1">💡</span>
                 <p className="text-gray-700">
-                  <span className="font-medium">有经验旅行管家：</span>根据服务质量定价¥80-120
+                  <span className="font-medium">中级��行管家：</span>根据服务质量定价¥60-100
                 </p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-blue-600 mt-1">💡</span>
                 <p className="text-gray-700">
-                  <span className="font-medium">资深旅行管家：</span>凭借口碑和特色服务可定价¥150+
+                  <span className="font-medium">高级/金牌旅行管家：</span>凭借口碑和特色服务可定价¥120+
                 </p>
               </div>
               <div className="flex items-start gap-2">
@@ -422,7 +383,7 @@ export function PriceSetting({
                   <div className="flex gap-2">
                     <Info className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                     <div className="text-green-700 text-xs space-y-1">
-                      <p>💡 无论游客预约几小时，车辆费用均按一天收取</p>
+                      <p>💡 无论游客预约几小时，���辆费用均按一天收取</p>
                       <p>🚗 车辆价格建议：经济型¥150-200，商务型¥250-300</p>
                       <p>📋 确保车辆信息真实有效，虚假信息将影响接单</p>
                     </div>

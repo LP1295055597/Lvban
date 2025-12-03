@@ -86,7 +86,7 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
               <div className="space-y-2 text-sm text-gray-700 text-left">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                  <span>定价范围：¥30-200/小时（普通旅行管家¥30-50）</span>
+                  <span className="font-medium text-orange-600">🎉 平台抽成比例降低20%</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
@@ -248,11 +248,15 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
               <Award className="w-5 h-5 text-yellow-600" />
               <h3 className="text-gray-800">认证特权</h3>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                <span>定价上限¥200/小时</span>
+            <div className="space-y-2 mb-3">
+              <div className="bg-gradient-to-r from-orange-100 to-amber-100 rounded-lg p-2 border border-orange-300">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-orange-600 flex-shrink-0" />
+                  <span className="text-sm font-medium text-orange-700">🎉 平台抽成比例降低20%</span>
+                </div>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                 <span>优先推荐</span>
@@ -264,6 +268,10 @@ export function GuideCertification({ onClose, onSuccess, currentStatus = 'none' 
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                 <span>高端客户</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <span>信任标识</span>
               </div>
             </div>
           </div>
